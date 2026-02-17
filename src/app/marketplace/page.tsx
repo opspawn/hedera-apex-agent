@@ -1,0 +1,180 @@
+'use client'
+
+import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { SearchBar } from '@/components/marketplace/SearchBar'
+import { AgentCard, type BrokerAgent } from '@/components/marketplace/AgentCard'
+import { AgentDetailModal } from '@/components/marketplace/AgentDetailModal'
+
+export default function MarketplacePage() {
+  const router = useRouter()
+  const [agents, setAgents] = useState<BrokerAgent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [source, setSource] = useState<string>('')
+  const [total, setTotal] = useState(0)
+  const [selectedAgent, setSelectedAgent] = useState<BrokerAgent | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const fetchAgents = useCallback(async (query: string, mode: 'hybrid' | 'broker' | 'local' = 'hybrid') => {
+    setLoading(true)
+    setError(null)
+    setSearchQuery(query)
+
+    try {
+      const q = query || 'agent'
+      const res = await fetch(`/api/marketplace/discover?q=${encodeURIComponent(q)}&mode=${mode}&limit=50`)
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to fetch agents')
+      }
+
+      const allAgents = [
+        ...(data.agents || []),
+        ...(data.localAgents || []),
+      ]
+
+      setAgents(allAgents)
+      setTotal(data.total || allAgents.length)
+      setSource(data.source || mode)
+    } catch (err: any) {
+      setError(err.message || 'Failed to load agents')
+      setAgents([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchAgents('agent')
+  }, [fetchAgents])
+
+  const handleSearch = useCallback((query: string, mode: 'hybrid' | 'broker' | 'local') => {
+    fetchAgents(query, mode)
+  }, [fetchAgents])
+
+  const handleChatWithAgent = useCallback((agent: BrokerAgent) => {
+    setSelectedAgent(null)
+    const params = new URLSearchParams()
+    if (agent.uaid) params.set('uaid', agent.uaid)
+    params.set('name', agent.name)
+    router.push(`/chat?${params.toString()}`)
+  }, [router])
+
+  return (
+    <main className="min-h-screen bg-hedera-dark text-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">
+            <span className="text-hedera-green">Agent</span> Marketplace
+          </h1>
+          <p className="text-gray-400">
+            Discover and interact with AI agents registered on the HOL Registry Broker
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className="mb-6">
+          <SearchBar onSearch={handleSearch} loading={loading} />
+        </div>
+
+        {/* Stats Bar */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-400">
+              {loading ? 'Searching...' : `${total} agents found`}
+            </span>
+            {source && !loading && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-hedera-card border border-hedera-border text-gray-500">
+                Source: {source}
+              </span>
+            )}
+          </div>
+          {searchQuery && !loading && (
+            <span className="text-xs text-gray-500">
+              Query: &quot;{searchQuery}&quot;
+            </span>
+          )}
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <span>{error}</span>
+            </div>
+            <button
+              onClick={() => fetchAgents(searchQuery || 'agent')}
+              className="mt-2 text-xs text-red-300 hover:text-red-200 underline"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Loading skeleton */}
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="bg-hedera-card border border-hedera-border rounded-xl p-5 animate-pulse">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-lg bg-hedera-border" />
+                  <div>
+                    <div className="h-4 w-32 bg-hedera-border rounded mb-1" />
+                    <div className="h-3 w-24 bg-hedera-border rounded" />
+                  </div>
+                </div>
+                <div className="h-3 w-full bg-hedera-border rounded mb-2" />
+                <div className="h-3 w-2/3 bg-hedera-border rounded mb-4" />
+                <div className="flex gap-1.5">
+                  <div className="h-5 w-16 bg-hedera-border rounded-full" />
+                  <div className="h-5 w-12 bg-hedera-border rounded-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Agent Grid */}
+        {!loading && agents.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {agents.map((agent, i) => (
+              <AgentCard
+                key={agent.agent_id + '-' + i}
+                agent={agent}
+                onSelect={setSelectedAgent}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && agents.length === 0 && !error && (
+          <div className="text-center py-16">
+            <div className="w-16 h-16 rounded-2xl bg-hedera-card border border-hedera-border flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-300 mb-1">No agents found</h3>
+            <p className="text-sm text-gray-500">Try a different search query or mode</p>
+          </div>
+        )}
+      </div>
+
+      {/* Agent Detail Modal */}
+      {selectedAgent && (
+        <AgentDetailModal
+          agent={selectedAgent}
+          onClose={() => setSelectedAgent(null)}
+          onChat={handleChatWithAgent}
+        />
+      )}
+    </main>
+  )
+}
