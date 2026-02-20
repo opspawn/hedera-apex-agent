@@ -160,7 +160,45 @@ const standards: StandardSection[] = [
   },
 ]
 
-export default function StandardsPage() {
+/** Status badge config based on verification state */
+function getStatusBadge(verificationStatus?: string): { label: string; className: string } {
+  switch (verificationStatus) {
+    case 'verified':
+      return { label: 'On-Chain Verified', className: 'bg-hedera-green/10 border-hedera-green/30 text-hedera-green' }
+    case 'configured':
+      return { label: 'Configured', className: 'bg-yellow-400/10 border-yellow-400/30 text-yellow-400' }
+    case 'unavailable':
+      return { label: 'Offline', className: 'bg-gray-400/10 border-gray-400/30 text-gray-400' }
+    default:
+      return { label: 'Implemented', className: '' }
+  }
+}
+
+export default async function StandardsPage() {
+  // Fetch verification status from the standards API
+  let verificationData: Record<string, { status: string; onChain: boolean; topicId?: string; messageCount?: number }> = {}
+  let testnetInfo: { connected: boolean; mode: string; network: string; accountId: string; topicsCreated: number; messagesSubmitted: number } | null = null
+  let agentCount = 0
+
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000'
+    const res = await fetch(`${baseUrl}/api/standards`, { cache: 'no-store' }).catch(() => null)
+    if (res?.ok) {
+      const data = await res.json()
+      if (data.standards) {
+        for (const s of data.standards) {
+          verificationData[s.code] = { status: s.status, onChain: s.onChain, topicId: s.topicId, messageCount: s.messageCount }
+        }
+      }
+      testnetInfo = data.testnet
+      agentCount = data.agentCount || 0
+    }
+  } catch {
+    // Graceful fallback — show static page
+  }
+
   return (
     <main className="min-h-screen bg-hedera-dark text-white">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -182,20 +220,64 @@ export default function StandardsPage() {
           </p>
         </div>
 
+        {/* Testnet Status Banner */}
+        {testnetInfo && (
+          <div className="mb-8 bg-hedera-card border border-hedera-border rounded-2xl p-5">
+            <div className="flex items-center gap-3 mb-3">
+              <span className={`w-3 h-3 rounded-full ${testnetInfo.connected ? 'bg-hedera-green animate-pulse' : 'bg-gray-500'}`} />
+              <h2 className="text-sm font-bold text-white">
+                Hedera Testnet — {testnetInfo.connected ? 'Connected' : 'Offline'}
+              </h2>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+              <div className="bg-hedera-dark/50 rounded-lg p-3">
+                <div className="text-gray-500 mb-1">Network</div>
+                <div className="text-white font-mono">{testnetInfo.network}</div>
+              </div>
+              <div className="bg-hedera-dark/50 rounded-lg p-3">
+                <div className="text-gray-500 mb-1">Account</div>
+                <div className="text-white font-mono">{testnetInfo.accountId}</div>
+              </div>
+              <div className="bg-hedera-dark/50 rounded-lg p-3">
+                <div className="text-gray-500 mb-1">Topics Created</div>
+                <div className="text-hedera-green font-bold text-lg">{testnetInfo.topicsCreated}</div>
+              </div>
+              <div className="bg-hedera-dark/50 rounded-lg p-3">
+                <div className="text-gray-500 mb-1">Messages Submitted</div>
+                <div className="text-hedera-green font-bold text-lg">{testnetInfo.messagesSubmitted}</div>
+              </div>
+            </div>
+            {agentCount > 0 && (
+              <div className="mt-3 text-xs text-gray-500">
+                {agentCount} agents registered with verified on-chain identities
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Architecture Overview */}
         <div className="mb-12 bg-hedera-card border border-hedera-border rounded-2xl p-6">
           <h2 className="text-lg font-bold text-white mb-4">Architecture Overview</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {standards.map((s) => (
-              <a
-                key={s.code}
-                href={`#${s.code.toLowerCase()}`}
-                className={`p-3 rounded-xl border ${s.borderColor} bg-hedera-dark/50 hover:bg-hedera-dark transition-colors`}
-              >
-                <div className={`font-mono text-sm font-bold ${s.color}`}>{s.code}</div>
-                <div className="text-xs text-gray-400 mt-0.5">{s.title}</div>
-              </a>
-            ))}
+            {standards.map((s) => {
+              const vd = verificationData[s.code]
+              const badge = getStatusBadge(vd?.status)
+              return (
+                <a
+                  key={s.code}
+                  href={`#${s.code.toLowerCase()}`}
+                  className={`p-3 rounded-xl border ${s.borderColor} bg-hedera-dark/50 hover:bg-hedera-dark transition-colors`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className={`font-mono text-sm font-bold ${s.color}`}>{s.code}</div>
+                    {vd && (
+                      <span className={`w-2 h-2 rounded-full ${vd.onChain ? 'bg-hedera-green' : 'bg-yellow-400'}`} />
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-400 mt-0.5">{s.title}</div>
+                </a>
+              )
+            })}
           </div>
           <div className="mt-6 pt-4 border-t border-hedera-border">
             <h3 className="text-sm font-medium text-gray-400 mb-3">Data Flow</h3>
@@ -217,74 +299,101 @@ export default function StandardsPage() {
 
         {/* Standard Sections */}
         <div className="space-y-8">
-          {standards.map((s) => (
-            <section
-              key={s.code}
-              id={s.code.toLowerCase()}
-              className={`bg-hedera-card border ${s.borderColor} rounded-2xl overflow-hidden`}
-            >
-              {/* Standard Header */}
-              <div className="p-6 border-b border-hedera-border">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className={`font-mono text-xl font-bold ${s.color}`}>{s.code}</div>
-                    <h2 className="text-lg font-semibold text-white mt-1">{s.title}</h2>
+          {standards.map((s) => {
+            const vd = verificationData[s.code]
+            const badge = getStatusBadge(vd?.status)
+            return (
+              <section
+                key={s.code}
+                id={s.code.toLowerCase()}
+                className={`bg-hedera-card border ${s.borderColor} rounded-2xl overflow-hidden`}
+              >
+                {/* Standard Header */}
+                <div className="p-6 border-b border-hedera-border">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className={`font-mono text-xl font-bold ${s.color}`}>{s.code}</div>
+                      <h2 className="text-lg font-semibold text-white mt-1">{s.title}</h2>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full border text-xs ${
+                      vd ? badge.className : `${s.borderColor} ${s.color}`
+                    }`}>
+                      {vd ? badge.label : 'Implemented'}
+                    </div>
                   </div>
-                  <div className={`px-3 py-1 rounded-full border ${s.borderColor} text-xs ${s.color}`}>
-                    Implemented
-                  </div>
-                </div>
-                <p className="text-sm text-gray-400 mt-3 leading-relaxed">{s.description}</p>
-              </div>
+                  <p className="text-sm text-gray-400 mt-3 leading-relaxed">{s.description}</p>
 
-              {/* Flow Diagram */}
-              <div className="p-6 bg-hedera-dark/30">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Message Flow</h3>
-                <div className="flex flex-wrap items-start gap-2">
-                  {s.flowSteps.map((step, i) => (
-                    <div key={i} className="flex items-start gap-2">
-                      <div className="flex flex-col items-center min-w-[120px]">
-                        <div className={`w-8 h-8 rounded-lg border ${s.borderColor} flex items-center justify-center text-xs font-bold ${s.color}`}>
-                          {i + 1}
-                        </div>
-                        <div className="text-xs font-medium text-white mt-1.5">{step.label}</div>
-                        <div className="text-[10px] text-gray-500 mt-0.5 text-center leading-tight">{step.detail}</div>
-                      </div>
-                      {i < s.flowSteps.length - 1 && (
-                        <svg className="w-4 h-4 text-gray-600 mt-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                  {/* On-chain verification details */}
+                  {vd && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {vd.topicId && (
+                        <span className="text-[10px] px-2 py-0.5 bg-hedera-dark rounded-full text-gray-500 font-mono border border-hedera-border">
+                          Topic: {vd.topicId}
+                        </span>
+                      )}
+                      {vd.messageCount !== undefined && vd.messageCount > 0 && (
+                        <span className="text-[10px] px-2 py-0.5 bg-hedera-dark rounded-full text-hedera-green border border-hedera-green/20">
+                          {vd.messageCount} on-chain messages
+                        </span>
+                      )}
+                      {vd.onChain && (
+                        <span className="text-[10px] px-2 py-0.5 bg-hedera-green/10 rounded-full text-hedera-green border border-hedera-green/20">
+                          Verified on Hedera Testnet
+                        </span>
                       )}
                     </div>
-                  ))}
+                  )}
                 </div>
-              </div>
 
-              {/* Implementation Details */}
-              <div className="p-6">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Our Implementation</h3>
-                <ul className="space-y-2">
-                  {s.implementation.map((item, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
-                      <svg className={`w-4 h-4 ${s.color} shrink-0 mt-0.5`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                {s.apiEndpoints && s.apiEndpoints.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {s.apiEndpoints.map((ep) => (
-                      <code key={ep} className="text-xs px-2 py-1 bg-hedera-dark rounded-lg text-gray-400 border border-hedera-border">
-                        {ep}
-                      </code>
+                {/* Flow Diagram */}
+                <div className="p-6 bg-hedera-dark/30">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Message Flow</h3>
+                  <div className="flex flex-wrap items-start gap-2">
+                    {s.flowSteps.map((step, i) => (
+                      <div key={i} className="flex items-start gap-2">
+                        <div className="flex flex-col items-center min-w-[120px]">
+                          <div className={`w-8 h-8 rounded-lg border ${s.borderColor} flex items-center justify-center text-xs font-bold ${s.color}`}>
+                            {i + 1}
+                          </div>
+                          <div className="text-xs font-medium text-white mt-1.5">{step.label}</div>
+                          <div className="text-[10px] text-gray-500 mt-0.5 text-center leading-tight">{step.detail}</div>
+                        </div>
+                        {i < s.flowSteps.length - 1 && (
+                          <svg className="w-4 h-4 text-gray-600 mt-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        )}
+                      </div>
                     ))}
                   </div>
-                )}
-              </div>
-            </section>
-          ))}
+                </div>
+
+                {/* Implementation Details */}
+                <div className="p-6">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Our Implementation</h3>
+                  <ul className="space-y-2">
+                    {s.implementation.map((item, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                        <svg className={`w-4 h-4 ${s.color} shrink-0 mt-0.5`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  {s.apiEndpoints && s.apiEndpoints.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {s.apiEndpoints.map((ep) => (
+                        <code key={ep} className="text-xs px-2 py-1 bg-hedera-dark rounded-lg text-gray-400 border border-hedera-border">
+                          {ep}
+                        </code>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </section>
+            )
+          })}
         </div>
 
         {/* CTA */}

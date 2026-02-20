@@ -107,6 +107,20 @@ export async function GET(request: NextRequest) {
       });
     } catch (err: any) {
       console.error('[discover] Broker search failed, falling back to local:', err.message);
+
+      // In broker-only mode, return local results with broker unavailable flag
+      if (mode === 'broker') {
+        const localResult = await ctx.marketplace.discoverAgents({
+          q, category, tags, verifiedOnly, minReputation, status, limit, offset,
+        });
+        return NextResponse.json({
+          agents: mapLocalAgents(localResult.agents),
+          total: localResult.total,
+          source: 'local',
+          brokerUnavailable: true,
+          brokerError: err.message,
+        });
+      }
     }
   }
 
@@ -124,6 +138,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST: Vector/semantic search via Registry Broker
+ * Falls back to local search when broker is unreachable.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -138,38 +153,52 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'query is required' }, { status: 400 });
     }
 
-    const client = await getClient();
-    const result = await client.vectorSearch({
-      query,
-      limit,
-      filter,
-    });
+    try {
+      const client = await getClient();
+      const result = await client.vectorSearch({
+        query,
+        limit,
+        filter,
+      });
 
-    const hits = (result as any)?.hits || (result as any)?.results || [];
+      const hits = (result as any)?.hits || (result as any)?.results || [];
 
-    return NextResponse.json({
-      agents: hits.map((hit: any) => {
-        // Vector search wraps results in hit.agent
-        const agent = hit.agent || hit;
-        return {
-          agent_id: agent.uaid || agent.id || 'unknown',
-          name: agent.display_name || agent.name || 'Unknown Agent',
-          description: agent.bio || agent.description || '',
-          uaid: agent.uaid,
-          endpoint: agent.endpoints?.primary || agent.endpoint || '',
-          similarity: hit.score || hit.similarity || 0,
-          registry: agent.registry || 'unknown',
-          source: 'vector-search',
-        };
-      }),
-      total: hits.length,
-      source: 'vector-search',
-    });
+      return NextResponse.json({
+        agents: hits.map((hit: any) => {
+          // Vector search wraps results in hit.agent
+          const agent = hit.agent || hit;
+          return {
+            agent_id: agent.uaid || agent.id || 'unknown',
+            name: agent.display_name || agent.name || 'Unknown Agent',
+            description: agent.bio || agent.description || '',
+            uaid: agent.uaid,
+            endpoint: agent.endpoints?.primary || agent.endpoint || '',
+            similarity: hit.score || hit.similarity || 0,
+            registry: agent.registry || 'unknown',
+            source: 'vector-search',
+          };
+        }),
+        total: hits.length,
+        source: 'vector-search',
+      });
+    } catch (brokerErr: any) {
+      // Graceful degradation: fall back to local keyword search
+      console.error('[discover] Vector search failed, falling back to local:', brokerErr.message);
+      const ctx = await getServerContext();
+      const result = await ctx.marketplace.discoverAgents({ q: query, limit });
+
+      return NextResponse.json({
+        agents: mapLocalAgents(result.agents),
+        total: result.total,
+        source: 'local',
+        brokerUnavailable: true,
+        brokerError: brokerErr.message,
+      });
+    }
   } catch (err: any) {
     return NextResponse.json({
-      error: 'Vector search failed',
+      error: 'Search failed',
       details: err.message,
-      source: 'vector-search',
-    }, { status: 500 });
+    }, { status: 400 });
   }
 }
