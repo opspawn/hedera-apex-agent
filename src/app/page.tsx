@@ -10,14 +10,14 @@ export default function Home() {
           <div className="w-16 h-16 bg-gradient-to-br from-hedera-green to-emerald-600 rounded-2xl flex items-center justify-center font-bold text-2xl mx-auto">
             H
           </div>
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-3xl sm:text-4xl font-bold">
             <span className="text-hedera-green">Hedera</span> Agent Marketplace
           </h1>
           <p className="text-gray-400 max-w-md mx-auto leading-relaxed">
             Privacy-preserving AI agent marketplace with live HOL Registry Broker discovery,
             HCS-10 messaging, HCS-19 compliance, HCS-26 skills, and ERC-8004 feedback.
           </p>
-          <div className="flex gap-4 justify-center pt-2">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
             <Link
               href="/marketplace"
               className="px-6 py-3 bg-gradient-to-r from-hedera-green to-emerald-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity"
@@ -42,7 +42,7 @@ export default function Home() {
         <h2 className="text-xl font-bold mb-6 text-center">
           Built on <span className="text-hedera-green">Hedera Standards</span>
         </h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {[
             { code: 'HCS-10', title: 'Agent Communication', desc: 'Secure agent-to-agent messaging via Hedera Consensus Service topics', color: 'text-hedera-green' },
             { code: 'HCS-11', title: 'Agent Profiles', desc: 'On-chain agent identity, capabilities, and metadata registry', color: 'text-blue-400' },

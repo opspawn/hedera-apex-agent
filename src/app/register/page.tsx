@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useToast } from '@/components/common/Toast'
 
 interface RegistrationForm {
   name: string
@@ -50,6 +51,7 @@ const initialForm: RegistrationForm = {
 }
 
 export default function RegisterPage() {
+  const { toast } = useToast()
   const [form, setForm] = useState<RegistrationForm>(initialForm)
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<RegistrationResult | null>(null)
@@ -93,8 +95,14 @@ export default function RegisterPage() {
       })
       const data = await res.json()
       setResult(data)
+      if (data.success) {
+        toast('success', `Agent "${form.name}" registered successfully!`)
+      } else {
+        toast('error', data.error || 'Registration failed')
+      }
     } catch (err: any) {
       setResult({ success: false, error: err.message || 'Registration failed' })
+      toast('error', err.message || 'Registration failed')
     } finally {
       setSubmitting(false)
     }
@@ -212,7 +220,7 @@ export default function RegisterPage() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>AI Model</label>
                   <input
@@ -283,7 +291,7 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Twitter Handle</label>
                   <input

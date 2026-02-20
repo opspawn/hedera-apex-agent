@@ -18,7 +18,7 @@ export function SearchBar({ onSearch, loading }: SearchBarProps) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full">
-      <div className="flex gap-2">
+      <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex-1 relative">
           <svg
             className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500"
@@ -36,20 +36,21 @@ export function SearchBar({ onSearch, loading }: SearchBarProps) {
             className="w-full pl-10 pr-4 py-3 bg-hedera-card border border-hedera-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-hedera-green/50 focus:ring-1 focus:ring-hedera-green/20 transition-all"
           />
         </div>
-        <select
-          value={mode}
-          onChange={(e) => setMode(e.target.value as any)}
-          className="px-3 py-3 bg-hedera-card border border-hedera-border rounded-xl text-sm text-gray-400 focus:outline-none focus:border-hedera-green/50 cursor-pointer"
-        >
-          <option value="hybrid">Hybrid</option>
-          <option value="broker">Broker</option>
-          <option value="local">Local</option>
-        </select>
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-6 py-3 bg-hedera-green text-hedera-dark font-semibold rounded-xl hover:bg-hedera-green/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
+        <div className="flex gap-2">
+          <select
+            value={mode}
+            onChange={(e) => setMode(e.target.value as any)}
+            className="px-3 py-3 bg-hedera-card border border-hedera-border rounded-xl text-sm text-gray-400 focus:outline-none focus:border-hedera-green/50 cursor-pointer"
+          >
+            <option value="hybrid">Hybrid</option>
+            <option value="broker">Broker</option>
+            <option value="local">Local</option>
+          </select>
+          <button
+            type="submit"
+            disabled={loading}
+            className="px-6 py-3 bg-hedera-green text-hedera-dark font-semibold rounded-xl hover:bg-hedera-green/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 flex-1 sm:flex-none"
+          >
           {loading ? (
             <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -58,7 +59,8 @@ export function SearchBar({ onSearch, loading }: SearchBarProps) {
           ) : (
             'Search'
           )}
-        </button>
+          </button>
+        </div>
       </div>
     </form>
   )

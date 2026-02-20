@@ -101,20 +101,20 @@ export async function POST(request: NextRequest) {
     const result = await client.registerAgent(registrationPayload);
 
     // Handle async registration (202 pending → poll for completion)
-    let finalResult = result;
-    if ((result as any)?.status === 'pending' && (result as any)?.attemptId) {
+    let finalResult: any = result;
+    if (finalResult?.status === 'pending' && finalResult?.attemptId) {
       finalResult = await client.waitForRegistrationCompletion(
-        (result as any).attemptId,
+        finalResult.attemptId,
         { intervalMs: 2000, timeoutMs: 60000 }
       );
     }
 
-    const uaid = (finalResult as any)?.uaid;
-    const agentId = (finalResult as any)?.agentId;
-    const topicIds = (finalResult as any)?.topicIds || {
-      inbound: (finalResult as any)?.inboundTopicId,
-      outbound: (finalResult as any)?.outboundTopicId,
-      profile: (finalResult as any)?.profileTopicId,
+    const uaid = finalResult?.uaid;
+    const agentId = finalResult?.agentId;
+    const topicIds = finalResult?.topicIds || {
+      inbound: finalResult?.inboundTopicId,
+      outbound: finalResult?.outboundTopicId,
+      profile: finalResult?.profileTopicId,
     };
 
     return NextResponse.json({

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { SearchBar } from '@/components/marketplace/SearchBar'
 import { AgentCard, type BrokerAgent } from '@/components/marketplace/AgentCard'
@@ -15,10 +15,15 @@ export default function MarketplacePage() {
   const [total, setTotal] = useState(0)
   const [selectedAgent, setSelectedAgent] = useState<BrokerAgent | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const isBackgroundRefresh = useRef(false)
 
-  const fetchAgents = useCallback(async (query: string, mode: 'hybrid' | 'broker' | 'local' = 'hybrid') => {
-    setLoading(true)
-    setError(null)
+  const fetchAgents = useCallback(async (query: string, mode: 'hybrid' | 'broker' | 'local' = 'hybrid', background = false) => {
+    if (!background) {
+      setLoading(true)
+      setError(null)
+    }
+    isBackgroundRefresh.current = background
     setSearchQuery(query)
 
     try {
@@ -38,17 +43,30 @@ export default function MarketplacePage() {
       setAgents(allAgents)
       setTotal(data.total || allAgents.length)
       setSource(data.source || mode)
+      setLastUpdated(new Date())
+      if (background) setError(null)
     } catch (err: any) {
-      setError(err.message || 'Failed to load agents')
-      setAgents([])
+      if (!background) {
+        setError(err.message || 'Failed to load agents')
+        setAgents([])
+      }
     } finally {
-      setLoading(false)
+      if (!background) setLoading(false)
+      isBackgroundRefresh.current = false
     }
   }, [])
 
   useEffect(() => {
     fetchAgents('agent')
   }, [fetchAgents])
+
+  // Auto-refresh every 30 seconds (background, no loading spinner)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchAgents(searchQuery || 'agent', 'hybrid', true)
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [fetchAgents, searchQuery])
 
   const handleSearch = useCallback((query: string, mode: 'hybrid' | 'broker' | 'local') => {
     fetchAgents(query, mode)
@@ -81,8 +99,8 @@ export default function MarketplacePage() {
         </div>
 
         {/* Stats Bar */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
+          <div className="flex items-center gap-2 sm:gap-4">
             <span className="text-sm text-gray-400">
               {loading ? 'Searching...' : `${total} agents found`}
             </span>
@@ -92,11 +110,18 @@ export default function MarketplacePage() {
               </span>
             )}
           </div>
-          {searchQuery && !loading && (
-            <span className="text-xs text-gray-500">
-              Query: &quot;{searchQuery}&quot;
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {searchQuery && !loading && (
+              <span className="text-xs text-gray-500 hidden sm:inline">
+                Query: &quot;{searchQuery}&quot;
+              </span>
+            )}
+            {lastUpdated && !loading && (
+              <span className="text-xs text-gray-600">
+                Updated {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Error */}
