@@ -111,7 +111,7 @@ async function main() {
     console.log(`Agent ID: ${(result as any).agentId}`);
   } else if (isPendingRegisterAgentResponse(result)) {
     console.log('\nPending — waiting for confirmation...');
-    const final = await client.waitForRegistrationCompletion(result.registrationId, {
+    const final = await client.waitForRegistrationCompletion((result as any).registrationId, {
       intervalMs: 5000,
       timeoutMs: 120000,
       onProgress: (p) => console.log(`  ${p.status}: ${(p as any).message || ''}`),
