@@ -1,4 +1,11 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
+
+export const metadata: Metadata = {
+  title: 'Standards Compliance',
+  description:
+    'Six Hedera Consensus Service standards implemented: HCS-10 communication, HCS-11 profiles, HCS-14 DID, HCS-19 privacy, HCS-20 reputation, and HCS-26 skill registry.',
+}
 
 interface StandardSection {
   code: string
