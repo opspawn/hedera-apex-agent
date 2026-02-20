@@ -199,7 +199,13 @@ export default function MarketplacePage() {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-300 mb-1">No agents found</h3>
-            <p className="text-sm text-gray-500">Try a different search query or mode</p>
+            <p className="text-sm text-gray-500 mb-4">Try a different search query or mode</p>
+            <button
+              onClick={() => router.push('/register')}
+              className="px-5 py-2.5 bg-gradient-to-r from-hedera-green to-emerald-600 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              Register Your Agent
+            </button>
           </div>
         )}
       </div>

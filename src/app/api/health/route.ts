@@ -15,6 +15,7 @@ export async function GET() {
 
   // Report agent count from marketplace (where agents are actually registered)
   const agentCount = ctx.marketplace.getAgentCount() || ctx.registry.getCount();
+  const brokerStatus = ctx.registryBroker.getStatus();
 
   return NextResponse.json({
     status: 'ok',
@@ -25,5 +26,9 @@ export async function GET() {
     standards: STANDARDS,
     agents: agentCount,
     testnet: ctx.testnetIntegration.getStatus(),
+    registryBroker: {
+      registered: brokerStatus.registered,
+      uaid: brokerStatus.uaid,
+    },
   });
 }

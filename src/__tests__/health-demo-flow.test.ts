@@ -66,6 +66,9 @@ vi.mock('@/lib/server', () => ({
     testnetIntegration: {
       getStatus: () => mockTestnetStatus(),
     },
+    registryBroker: {
+      getStatus: () => ({ registered: true, uaid: 'uaid:aid:test123', brokerUrl: 'https://hol.org/registry/api/v1' }),
+    },
     startTime: Date.now() - 60000,
   }),
   getServerContextSync: vi.fn().mockReturnValue({
@@ -75,6 +78,9 @@ vi.mock('@/lib/server', () => ({
     marketplace: { getAgentCount: () => mockMarketplaceGetAgentCount() },
     registry: { getCount: () => mockRegistryGetCount() },
     testnetIntegration: { getStatus: () => mockTestnetStatus() },
+    registryBroker: {
+      getStatus: () => ({ registered: true, uaid: 'uaid:aid:test123', brokerUrl: 'https://hol.org/registry/api/v1' }),
+    },
     startTime: Date.now() - 60000,
   }),
 }));
@@ -153,6 +159,15 @@ describe('GET /api/health', () => {
 
     expect(data.uptime).toBeGreaterThanOrEqual(0);
     expect(typeof data.uptime).toBe('number');
+  });
+
+  it('reports registry broker status', async () => {
+    const res = await healthGET();
+    const data = await res.json();
+
+    expect(data.registryBroker).toBeDefined();
+    expect(data.registryBroker.registered).toBe(true);
+    expect(data.registryBroker.uaid).toBe('uaid:aid:test123');
   });
 });
 
