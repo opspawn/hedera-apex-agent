@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "register-agent": "npx tsx src/scripts/register-agent.ts",
+    "publish-skill": "npx tsx scripts/publish-skill.ts",
+    "publish-skill:quote": "npx tsx scripts/publish-skill.ts --quote-only",
+    "test-credits": "npx tsx scripts/test-credits.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
