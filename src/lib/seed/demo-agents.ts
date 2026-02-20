@@ -11,6 +11,8 @@ import { AgentRegistration } from '../types';
 export interface SeedAgent extends AgentRegistration {
   /** Initial reputation score (0–100) */
   reputation: number;
+  /** Primary marketplace category */
+  category: string;
   /** Whether the agent has HCS-19 privacy consent */
   hasPrivacyConsent: boolean;
   /** Consent purposes if hasPrivacyConsent is true */
@@ -25,6 +27,7 @@ export const DEMO_AGENTS: SeedAgent[] = [
     protocols: ['a2a-v0.3', 'hcs-10', 'mcp'],
     payment_address: '0.0.7854100',
     reputation: 92,
+    category: 'Security Audit',
     hasPrivacyConsent: true,
     consentPurposes: ['security_audit', 'data_sharing', 'analytics'],
     skills: [
@@ -57,6 +60,7 @@ export const DEMO_AGENTS: SeedAgent[] = [
     protocols: ['a2a-v0.3', 'hcs-10'],
     payment_address: '0.0.7854101',
     reputation: 87,
+    category: 'Translation',
     hasPrivacyConsent: true,
     consentPurposes: ['data_processing', 'translation'],
     skills: [
@@ -89,6 +93,7 @@ export const DEMO_AGENTS: SeedAgent[] = [
     protocols: ['a2a-v0.3', 'hcs-10', 'x402-v2'],
     payment_address: '0.0.7854102',
     reputation: 78,
+    category: 'Data Analysis',
     hasPrivacyConsent: false,
     skills: [
       {
@@ -120,6 +125,7 @@ export const DEMO_AGENTS: SeedAgent[] = [
     protocols: ['a2a-v0.3', 'hcs-10', 'mcp'],
     payment_address: '0.0.7854103',
     reputation: 95,
+    category: 'AI Assistant',
     hasPrivacyConsent: true,
     consentPurposes: ['workflow_execution', 'data_sharing', 'scheduling'],
     skills: [
@@ -142,6 +148,7 @@ export const DEMO_AGENTS: SeedAgent[] = [
     protocols: ['a2a-v0.3', 'hcs-10'],
     payment_address: '0.0.7854104',
     reputation: 84,
+    category: 'Content Creation',
     hasPrivacyConsent: true,
     consentPurposes: ['image_processing', 'data_storage'],
     skills: [
@@ -174,6 +181,7 @@ export const DEMO_AGENTS: SeedAgent[] = [
     protocols: ['a2a-v0.3', 'hcs-10', 'x402-v2'],
     payment_address: '0.0.7854105',
     reputation: 90,
+    category: 'Data Analysis',
     hasPrivacyConsent: false,
     skills: [
       {
@@ -195,6 +203,7 @@ export const DEMO_AGENTS: SeedAgent[] = [
     protocols: ['a2a-v0.3', 'hcs-10'],
     payment_address: '0.0.7854106',
     reputation: 72,
+    category: 'AI Assistant',
     hasPrivacyConsent: true,
     consentPurposes: ['document_processing', 'data_extraction'],
     skills: [
@@ -227,6 +236,7 @@ export const DEMO_AGENTS: SeedAgent[] = [
     protocols: ['a2a-v0.3', 'hcs-10', 'mcp'],
     payment_address: '0.0.7854107',
     reputation: 88,
+    category: 'Code Review',
     hasPrivacyConsent: true,
     consentPurposes: ['task_coordination', 'agent_communication', 'result_aggregation'],
     skills: [

@@ -62,7 +62,10 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
     fetchFeedback()
   }, [agent])
 
-  const allSkills = skills?.brokerSkills || skills?.skills || []
+  // Prefer embedded skills from local agents, fall back to fetched skills
+  const allSkills = agent.skills && agent.skills.length > 0
+    ? agent.skills
+    : (skills?.brokerSkills || skills?.skills || [])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -151,7 +154,7 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
 
               {agent.protocols && agent.protocols.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-400 mb-2">Protocols</h3>
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">HCS Standards & Protocols</h3>
                   <div className="flex flex-wrap gap-2">
                     {agent.protocols.map((p, i) => (
                       <span
@@ -165,23 +168,54 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
                 </div>
               )}
 
+              {/* Privacy consent status */}
+              {agent.has_privacy_consent !== undefined && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">HCS-19 Privacy Compliance</h3>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${agent.has_privacy_consent ? 'bg-hedera-green' : 'bg-yellow-500'}`} />
+                    <span className={`text-xs ${agent.has_privacy_consent ? 'text-hedera-green' : 'text-yellow-400'}`}>
+                      {agent.has_privacy_consent ? 'Privacy consent granted' : 'No consent on file'}
+                    </span>
+                    {agent.verification && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-hedera-card border border-hedera-border text-gray-400 ml-2">
+                        {agent.verification}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {agent.endpoint && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-400 mb-2">Endpoint</h3>
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">A2A Endpoint</h3>
                   <code className="text-xs text-hedera-green bg-hedera-card px-3 py-1.5 rounded-lg block break-all">
                     {agent.endpoint}
                   </code>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
+              {agent.payment_address && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">Payment Address</h3>
+                  <code className="text-xs text-cyan-400 bg-hedera-card px-3 py-1.5 rounded-lg block break-all">
+                    {agent.payment_address}
+                  </code>
+                </div>
+              )}
+
+              <div className="grid grid-cols-3 gap-3 pt-2">
                 <div className="bg-hedera-card rounded-xl p-4 border border-hedera-border">
                   <p className="text-xs text-gray-400 mb-1">Trust Score</p>
                   <p className="text-2xl font-bold text-hedera-green">{agent.trust_score ?? 0}</p>
                 </div>
                 <div className="bg-hedera-card rounded-xl p-4 border border-hedera-border">
-                  <p className="text-xs text-gray-400 mb-1">Source</p>
-                  <p className="text-sm font-medium text-white capitalize">{agent.source?.replace('-', ' ') || 'Registry'}</p>
+                  <p className="text-xs text-gray-400 mb-1">Skills</p>
+                  <p className="text-2xl font-bold text-white">{agent.skills?.length ?? 0}</p>
+                </div>
+                <div className="bg-hedera-card rounded-xl p-4 border border-hedera-border">
+                  <p className="text-xs text-gray-400 mb-1">Status</p>
+                  <p className="text-sm font-medium text-hedera-green capitalize">{agent.status || agent.source?.replace('-', ' ') || 'Active'}</p>
                 </div>
               </div>
 
@@ -226,11 +260,18 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
                     <div key={i} className="bg-hedera-card rounded-xl p-4 border border-hedera-border">
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-white">{skill.name || skill.display_name || 'Unnamed Skill'}</h4>
-                        {skill.category && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-hedera-purple/10 text-hedera-purple">
-                            {skill.category}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {skill.pricing && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-hedera-green/10 text-hedera-green font-medium">
+                              {skill.pricing.amount} {skill.pricing.token}/{skill.pricing.unit}
+                            </span>
+                          )}
+                          {skill.category && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-hedera-purple/10 text-hedera-purple">
+                              {skill.category}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <p className="text-sm text-gray-400 mb-2">{skill.description || skill.bio || 'No description'}</p>
                       {skill.tags && skill.tags.length > 0 && (

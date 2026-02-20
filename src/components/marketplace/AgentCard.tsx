@@ -13,6 +13,21 @@ interface BrokerAgent {
   available?: boolean
   source?: string
   similarity?: number
+  skills?: Array<{
+    id: string
+    name: string
+    description?: string
+    category?: string
+    tags?: string[]
+    input_schema?: Record<string, unknown>
+    output_schema?: Record<string, unknown>
+    pricing: { amount: number; token: string; unit: string }
+  }>
+  payment_address?: string
+  status?: string
+  reputation_score?: number
+  verification?: string
+  has_privacy_consent?: boolean
 }
 
 interface AgentCardProps {
@@ -55,12 +70,13 @@ export function AgentCard({ agent, onSelect }: AgentCardProps) {
         )}
       </div>
 
-      <p className="text-sm text-gray-400 mb-4 line-clamp-2 min-h-[40px]">
+      <p className="text-sm text-gray-400 mb-3 line-clamp-2 min-h-[40px]">
         {agent.description || 'No description available'}
       </p>
 
-      {agent.capabilities && agent.capabilities.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
+      {/* Skills / capabilities */}
+      {(agent.capabilities && agent.capabilities.length > 0) && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
           {agent.capabilities.slice(0, 4).map((cap, i) => (
             <span
               key={i}
@@ -74,6 +90,18 @@ export function AgentCard({ agent, onSelect }: AgentCardProps) {
               +{agent.capabilities.length - 4}
             </span>
           )}
+        </div>
+      )}
+
+      {/* Pricing range from skills */}
+      {agent.skills && agent.skills.length > 0 && (
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[10px] text-gray-500">
+            {agent.skills.length} skill{agent.skills.length !== 1 ? 's' : ''}
+          </span>
+          <span className="text-[10px] text-hedera-green font-medium">
+            {Math.min(...agent.skills.map(s => s.pricing.amount))}–{Math.max(...agent.skills.map(s => s.pricing.amount))} HBAR
+          </span>
         </div>
       )}
 

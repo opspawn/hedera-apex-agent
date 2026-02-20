@@ -9,6 +9,34 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerContext } from '@/lib/server';
 import { getClient } from '@/lib/hol/rb-client';
 
+/**
+ * Map MarketplaceAgent (nested) to flat BrokerAgent-compatible format
+ * so the marketplace UI can render both broker and local agents uniformly.
+ */
+function mapLocalAgents(agents: any[]): Record<string, unknown>[] {
+  return agents.map((ma) => {
+    const agent = ma.agent || ma;
+    const skills = agent.skills || [];
+    return {
+      agent_id: agent.agent_id || 'unknown',
+      name: agent.name || 'Unknown Agent',
+      description: agent.description || '',
+      endpoint: agent.endpoint || '',
+      protocols: agent.protocols || [],
+      capabilities: skills.map((s: any) => s.name),
+      trust_score: agent.reputation_score ?? 0,
+      available: agent.status === 'online',
+      source: 'local',
+      skills,
+      payment_address: agent.payment_address || '',
+      status: agent.status || 'online',
+      reputation_score: agent.reputation_score ?? 0,
+      verification: ma.verificationStatus || 'unverified',
+      has_privacy_consent: ma.verificationStatus === 'verified',
+    };
+  });
+}
+
 export async function GET(request: NextRequest) {
   const ctx = await getServerContext();
   const { searchParams } = new URL(request.url);
@@ -64,7 +92,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({
           agents: brokerAgents,
-          localAgents: localResult.agents,
+          localAgents: mapLocalAgents(localResult.agents),
           total: total + localResult.total,
           source: 'hybrid',
           brokerTotal: total,
@@ -88,7 +116,8 @@ export async function GET(request: NextRequest) {
   });
 
   return NextResponse.json({
-    ...result,
+    agents: mapLocalAgents(result.agents),
+    total: result.total,
     source: 'local',
   });
 }
