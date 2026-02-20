@@ -3,7 +3,7 @@ import { LiveStats } from '@/components/common/LiveStats'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-hedera-dark text-white">
+    <main className="min-h-screen bg-hedera-dark text-white page-enter">
       {/* Hero */}
       <div className="flex items-center justify-center px-6 py-20">
         <div className="text-center space-y-6 max-w-2xl">

@@ -21,6 +21,47 @@ interface FeedbackData {
   feedback: any
 }
 
+function TrustScoreBar({ score }: { score: number }) {
+  const color = score >= 70 ? 'bg-hedera-green' : score >= 40 ? 'bg-yellow-400' : 'bg-red-400'
+  const label = score >= 70 ? 'High' : score >= 40 ? 'Medium' : 'Low'
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs text-gray-400">Trust Score</span>
+        <span className={`text-sm font-bold ${score >= 70 ? 'text-hedera-green' : score >= 40 ? 'text-yellow-400' : 'text-red-400'}`}>
+          {score}/100 <span className="text-[10px] font-normal text-gray-500">({label})</span>
+        </span>
+      </div>
+      <div className="w-full h-2 bg-hedera-border rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${color}`}
+          style={{ width: `${Math.min(100, Math.max(0, score))}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function ProtocolBadge({ protocol }: { protocol: string }) {
+  const colors: Record<string, string> = {
+    'hcs-10': 'bg-hedera-green/10 border-hedera-green/20 text-hedera-green',
+    'hcs-11': 'bg-blue-400/10 border-blue-400/20 text-blue-400',
+    'hcs-14': 'bg-cyan-400/10 border-cyan-400/20 text-cyan-400',
+    'hcs-19': 'bg-hedera-purple/10 border-hedera-purple/20 text-hedera-purple',
+    'hcs-20': 'bg-yellow-400/10 border-yellow-400/20 text-yellow-400',
+    'hcs-26': 'bg-emerald-400/10 border-emerald-400/20 text-emerald-400',
+  }
+  const colorClass = colors[protocol.toLowerCase()] || 'bg-hedera-green/10 border-hedera-green/20 text-hedera-green'
+
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border font-medium ${colorClass}`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-current" />
+      {protocol.toUpperCase()}
+    </span>
+  )
+}
+
 export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalProps) {
   const [skills, setSkills] = useState<SkillData | null>(null)
   const [feedback, setFeedback] = useState<FeedbackData | null>(null)
@@ -62,6 +103,13 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
     fetchFeedback()
   }, [agent])
 
+  // Close on Escape
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', handleEsc)
+    return () => window.removeEventListener('keydown', handleEsc)
+  }, [onClose])
+
   // Prefer embedded skills from local agents, fall back to fetched skills
   const allSkills = agent.skills && agent.skills.length > 0
     ? agent.skills
@@ -69,29 +117,29 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm" />
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
       <div
-        className="relative bg-hedera-dark border border-hedera-border rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden animate-slide-up"
+        className="relative bg-hedera-dark border border-hedera-border rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b border-hedera-border">
+        <div className="p-5 sm:p-6 border-b border-hedera-border">
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-hedera-purple/30 to-hedera-green/30 flex items-center justify-center border border-hedera-border">
-                <span className="text-2xl font-bold text-hedera-green">
+            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-gradient-to-br from-hedera-purple/30 to-hedera-green/30 flex items-center justify-center border border-hedera-border shrink-0">
+                <span className="text-xl sm:text-2xl font-bold text-hedera-green">
                   {(agent.name || 'A').charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-white">{agent.name || 'Unknown Agent'}</h2>
+              <div className="min-w-0">
+                <h2 className="text-lg sm:text-xl font-bold text-white truncate">{agent.name || 'Unknown Agent'}</h2>
                 {agent.uaid && (
-                  <p className="text-xs text-gray-500 font-mono mt-0.5">{agent.uaid}</p>
+                  <p className="text-xs text-gray-500 font-mono mt-0.5 truncate">{agent.uaid}</p>
                 )}
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {agent.available && (
                     <span className="flex items-center gap-1 text-xs text-hedera-green">
-                      <span className="w-1.5 h-1.5 rounded-full bg-hedera-green" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-hedera-green animate-pulse-glow" />
                       Online
                     </span>
                   )}
@@ -101,7 +149,7 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-hedera-card transition-colors text-gray-400 hover:text-white"
+              className="p-2 rounded-lg hover:bg-hedera-card transition-colors text-gray-400 hover:text-white shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -116,25 +164,31 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 px-4 py-3 text-sm font-medium capitalize transition-colors ${
+              className={`flex-1 px-4 py-3 text-sm font-medium capitalize transition-colors relative ${
                 activeTab === tab
-                  ? 'text-hedera-green border-b-2 border-hedera-green'
+                  ? 'text-hedera-green'
                   : 'text-gray-400 hover:text-white'
               }`}
             >
               {tab}
+              {activeTab === tab && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-hedera-green" />
+              )}
             </button>
           ))}
         </div>
 
         {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(80vh-200px)]">
+        <div className="p-5 sm:p-6 overflow-y-auto max-h-[calc(85vh-200px)]">
           {activeTab === 'overview' && (
-            <div className="space-y-4">
+            <div className="space-y-5">
               <div>
                 <h3 className="text-sm font-medium text-gray-400 mb-2">Description</h3>
-                <p className="text-white">{agent.description || 'No description available'}</p>
+                <p className="text-white text-sm leading-relaxed">{agent.description || 'No description available'}</p>
               </div>
+
+              {/* Trust Score Visualization */}
+              <TrustScoreBar score={agent.trust_score ?? 0} />
 
               {agent.capabilities && agent.capabilities.length > 0 && (
                 <div>
@@ -152,29 +206,41 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
                 </div>
               )}
 
+              {/* Protocol badges */}
               {agent.protocols && agent.protocols.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium text-gray-400 mb-2">HCS Standards & Protocols</h3>
+                  <h3 className="text-sm font-medium text-gray-400 mb-2">Supported Protocols</h3>
                   <div className="flex flex-wrap gap-2">
                     {agent.protocols.map((p, i) => (
-                      <span
-                        key={i}
-                        className="text-xs px-3 py-1 rounded-full bg-hedera-green/10 border border-hedera-green/20 text-hedera-green"
-                      >
-                        {p}
-                      </span>
+                      <ProtocolBadge key={i} protocol={p} />
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Privacy consent status */}
-              {agent.has_privacy_consent !== undefined && (
-                <div>
-                  <h3 className="text-sm font-medium text-gray-400 mb-2">HCS-19 Privacy Compliance</h3>
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full ${agent.has_privacy_consent ? 'bg-hedera-green' : 'bg-yellow-500'}`} />
-                    <span className={`text-xs ${agent.has_privacy_consent ? 'text-hedera-green' : 'text-yellow-400'}`}>
+              {/* HCS-19 Privacy Consent */}
+              <div>
+                <h3 className="text-sm font-medium text-gray-400 mb-2">HCS-19 Privacy Compliance</h3>
+                <div className={`flex items-center gap-3 p-3 rounded-lg border ${
+                  agent.has_privacy_consent
+                    ? 'bg-hedera-green/5 border-hedera-green/20'
+                    : 'bg-yellow-500/5 border-yellow-500/20'
+                }`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                    agent.has_privacy_consent ? 'bg-hedera-green/10' : 'bg-yellow-500/10'
+                  }`}>
+                    {agent.has_privacy_consent ? (
+                      <svg className="w-4 h-4 text-hedera-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <span className={`text-sm font-medium ${agent.has_privacy_consent ? 'text-hedera-green' : 'text-yellow-400'}`}>
                       {agent.has_privacy_consent ? 'Privacy consent granted' : 'No consent on file'}
                     </span>
                     {agent.verification && (
@@ -184,7 +250,7 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
                     )}
                   </div>
                 </div>
-              )}
+              </div>
 
               {agent.endpoint && (
                 <div>
@@ -205,25 +271,28 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
               )}
 
               <div className="grid grid-cols-3 gap-3 pt-2">
-                <div className="bg-hedera-card rounded-xl p-4 border border-hedera-border">
-                  <p className="text-xs text-gray-400 mb-1">Trust Score</p>
+                <div className="bg-hedera-card rounded-xl p-4 border border-hedera-border text-center">
+                  <p className="text-xs text-gray-400 mb-1">Trust</p>
                   <p className="text-2xl font-bold text-hedera-green">{agent.trust_score ?? 0}</p>
                 </div>
-                <div className="bg-hedera-card rounded-xl p-4 border border-hedera-border">
+                <div className="bg-hedera-card rounded-xl p-4 border border-hedera-border text-center">
                   <p className="text-xs text-gray-400 mb-1">Skills</p>
                   <p className="text-2xl font-bold text-white">{agent.skills?.length ?? 0}</p>
                 </div>
-                <div className="bg-hedera-card rounded-xl p-4 border border-hedera-border">
+                <div className="bg-hedera-card rounded-xl p-4 border border-hedera-border text-center">
                   <p className="text-xs text-gray-400 mb-1">Status</p>
-                  <p className="text-sm font-medium text-hedera-green capitalize">{agent.status || agent.source?.replace('-', ' ') || 'Active'}</p>
+                  <p className="text-sm font-medium text-hedera-green capitalize">{agent.status || 'Active'}</p>
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-4">
+              <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => onChat(agent)}
-                  className="flex-1 py-3 bg-hedera-green text-hedera-dark font-semibold rounded-xl hover:bg-hedera-green/90 transition-colors"
+                  className="flex-1 py-3 bg-gradient-to-r from-hedera-green to-emerald-600 text-hedera-dark font-semibold rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
                   Chat with Agent
                 </button>
                 {agent.agent_id && (
@@ -234,8 +303,9 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
                       params.set('name', agent.name || 'Unknown Agent')
                       window.location.href = `/chat?${params.toString()}`
                     }}
-                    className="px-4 py-3 border border-cyan-400/30 text-cyan-400 font-medium rounded-xl hover:bg-cyan-400/10 transition-colors text-sm"
+                    className="px-4 py-3 border border-cyan-400/30 text-cyan-400 font-medium rounded-xl hover:bg-cyan-400/10 transition-colors text-sm flex items-center gap-2"
                   >
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
                     HCS-10
                   </button>
                 )}
@@ -257,7 +327,7 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
               ) : allSkills.length > 0 ? (
                 <div className="space-y-3">
                   {allSkills.map((skill: any, i: number) => (
-                    <div key={i} className="bg-hedera-card rounded-xl p-4 border border-hedera-border">
+                    <div key={i} className="bg-hedera-card rounded-xl p-4 border border-hedera-border hover:border-hedera-green/20 transition-colors">
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-white">{skill.name || skill.display_name || 'Unnamed Skill'}</h4>
                         <div className="flex items-center gap-2">
@@ -297,7 +367,6 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
 
           {activeTab === 'feedback' && (
             <div className="space-y-6">
-              {/* Feedback summary */}
               {loadingFeedback ? (
                 <div className="bg-hedera-card rounded-xl p-4 border border-hedera-border animate-pulse">
                   <div className="h-4 bg-hedera-border rounded w-1/4 mb-2" />
@@ -331,7 +400,6 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
                 </div>
               )}
 
-              {/* Feedback form */}
               {agent.uaid && <FeedbackForm uaid={agent.uaid} />}
             </div>
           )}
