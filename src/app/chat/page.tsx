@@ -247,7 +247,7 @@ function ChatContent() {
       </div>
 
       {/* Chat area */}
-      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4" aria-live="polite" aria-relevant="additions">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-center max-w-xl mx-auto space-y-6 animate-fade-in">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-hedera-green/20 to-hedera-purple/20 border border-hedera-border flex items-center justify-center">
@@ -362,6 +362,7 @@ function ChatContent() {
             onClick={clearChat}
             className="w-10 h-10 rounded-lg border border-hedera-border bg-hedera-dark text-gray-500 hover:text-red-400 hover:border-red-400/30 flex items-center justify-center transition-colors shrink-0"
             title="Clear chat"
+            aria-label="Clear chat history"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -373,6 +374,7 @@ function ChatContent() {
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={chatMode === 'hcs10' ? 'Send message via HCS-10 topic...' : chatMode === 'broker' ? 'Send message to agent via broker relay...' : 'Ask about agents, skills, hiring, or privacy...'}
+            aria-label="Chat message"
             rows={1}
             className="flex-1 bg-hedera-dark border border-hedera-border rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-hedera-green/50 focus:ring-1 focus:ring-hedera-green/20 transition-all"
             style={{ maxHeight: '120px' }}
@@ -382,6 +384,7 @@ function ChatContent() {
             disabled={isLoading || !input.trim()}
             className="w-10 h-10 rounded-lg bg-gradient-to-br from-hedera-green to-emerald-600 text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:from-hedera-green/90 hover:to-emerald-500 transition-all shrink-0"
             title="Send message"
+            aria-label="Send message"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

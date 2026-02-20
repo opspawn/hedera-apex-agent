@@ -17,7 +17,7 @@ export function SearchBar({ onSearch, loading }: SearchBarProps) {
   }, [query, mode, onSearch])
 
   return (
-    <form onSubmit={handleSubmit} className="w-full">
+    <form onSubmit={handleSubmit} className="w-full" role="search" aria-label="Search agents">
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="flex-1 relative">
           <svg
@@ -25,6 +25,7 @@ export function SearchBar({ onSearch, loading }: SearchBarProps) {
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            aria-hidden="true"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -33,6 +34,7 @@ export function SearchBar({ onSearch, loading }: SearchBarProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search agents by name, skill, or capability..."
+            aria-label="Search agents by name, skill, or capability"
             className="w-full pl-10 pr-4 py-3 bg-hedera-card border border-hedera-border rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-hedera-green/50 focus:ring-1 focus:ring-hedera-green/20 transition-all"
           />
         </div>
@@ -40,6 +42,7 @@ export function SearchBar({ onSearch, loading }: SearchBarProps) {
           <select
             value={mode}
             onChange={(e) => setMode(e.target.value as any)}
+            aria-label="Search mode"
             className="px-3 py-3 bg-hedera-card border border-hedera-border rounded-xl text-sm text-gray-400 focus:outline-none focus:border-hedera-green/50 cursor-pointer"
           >
             <option value="hybrid">Hybrid</option>

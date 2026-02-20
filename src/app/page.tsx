@@ -7,7 +7,7 @@ export default function Home() {
       {/* Hero */}
       <div className="flex items-center justify-center px-6 py-20">
         <div className="text-center space-y-6 max-w-2xl">
-          <div className="w-16 h-16 bg-gradient-to-br from-hedera-green to-emerald-600 rounded-2xl flex items-center justify-center font-bold text-2xl mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-hedera-green to-emerald-600 rounded-2xl flex items-center justify-center font-bold text-2xl mx-auto" aria-hidden="true">
             H
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold">

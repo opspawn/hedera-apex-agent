@@ -116,8 +116,8 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
     : (skills?.brokerSkills || skills?.skills || [])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={`Agent details: ${agent.name || 'Unknown Agent'}`} onClick={onClose}>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" aria-hidden="true" />
       <div
         className="relative bg-hedera-dark border border-hedera-border rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-hidden animate-slide-up"
         onClick={(e) => e.stopPropagation()}
@@ -149,6 +149,7 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
             </div>
             <button
               onClick={onClose}
+              aria-label="Close agent details"
               className="p-2 rounded-lg hover:bg-hedera-card transition-colors text-gray-400 hover:text-white shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
