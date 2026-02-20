@@ -6,9 +6,17 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const { mockGetStatus, mockGetAgentCount } = vi.hoisted(() => ({
+const { mockGetStatus, mockGetAgentCount, mockRegistryBrokerStatus } = vi.hoisted(() => ({
   mockGetStatus: vi.fn(),
   mockGetAgentCount: vi.fn(),
+  mockRegistryBrokerStatus: {
+    getStatus: () => ({
+      registered: true,
+      uaid: 'uaid:aid:test123',
+      brokerUrl: 'https://hol.org/registry/api/v1',
+      lastCheck: new Date().toISOString(),
+    }),
+  },
 }));
 
 vi.mock('@/lib/server', () => ({
@@ -19,6 +27,7 @@ vi.mock('@/lib/server', () => ({
     },
     marketplace: { getAgentCount: mockGetAgentCount },
     testnetIntegration: { getStatus: mockGetStatus },
+    registryBroker: mockRegistryBrokerStatus,
   })),
   getServerContextSync: vi.fn().mockReturnValue({
     config: {
@@ -27,6 +36,7 @@ vi.mock('@/lib/server', () => ({
     },
     marketplace: { getAgentCount: mockGetAgentCount },
     testnetIntegration: { getStatus: mockGetStatus },
+    registryBroker: mockRegistryBrokerStatus,
   }),
 }));
 

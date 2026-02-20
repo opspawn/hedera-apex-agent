@@ -104,13 +104,24 @@ export class RegistryBroker {
             creator: profile.creator,
           },
         } as any,
-        communicationProtocol: 'hcs-10',
+        protocol: 'https',
         registry: 'hashgraph-online',
         endpoint,
         metadata: {
           provider: 'opspawn',
-          version: '0.19.0',
-          standards: ['HCS-10', 'HCS-11', 'HCS-14', 'HCS-19', 'HCS-20', 'HCS-26'],
+          version: '1.0.0',
+          nativeId: 'hedera.opspawn.com',
+          category: 'marketplace',
+          openConvAICompatible: true,
+          customFields: {
+            network: this.config.network,
+            nativeId: `hedera:${this.config.network}:${this.config.accountId}`,
+            accountId: this.config.accountId,
+            inboundTopicId: process.env.INBOUND_TOPIC_ID || '0.0.7854276',
+            outboundTopicId: process.env.OUTBOUND_TOPIC_ID || '0.0.7854275',
+            profileTopicId: process.env.PROFILE_TOPIC_ID || '0.0.7854282',
+            standards: 'HCS-10,HCS-11,HCS-14,HCS-19,HCS-20,HCS-26',
+          },
         },
       });
 

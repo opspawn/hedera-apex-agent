@@ -73,6 +73,8 @@ export async function GET() {
     },
   ];
 
+  const brokerStatus = ctx.registryBroker.getStatus();
+
   return NextResponse.json({
     standards,
     testnet: {
@@ -82,6 +84,11 @@ export async function GET() {
       accountId: testnetStatus.accountId,
       topicsCreated: testnetStatus.topicsCreated,
       messagesSubmitted: testnetStatus.messagesSubmitted,
+    },
+    registryBroker: {
+      registered: brokerStatus.registered,
+      uaid: brokerStatus.uaid,
+      brokerUrl: brokerStatus.brokerUrl,
     },
     agentCount,
     timestamp: new Date().toISOString(),

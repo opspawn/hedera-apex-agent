@@ -30,40 +30,53 @@ export async function POST() {
     const result = await client.registerAgent({
       profile: {
         version: '1.0.0',
-        type: 1, // ProfileType.AI_AGENT (not 'ai_agent')
-        display_name: 'OpSpawn Marketplace Agent',
+        type: 1, // ProfileType.AI_AGENT
+        display_name: 'OpSpawn Agent Marketplace',
         alias: 'opspawn-marketplace',
-        bio: 'Privacy-preserving AI agent marketplace on Hedera with HCS-10/11/14/19/20/26 standards',
+        bio: 'Privacy-preserving AI agent marketplace on Hedera. Discover, hire, and interact with AI agents via HCS-10 messaging, HCS-19 consent, HCS-26 skills, HCS-20 reputation, and x402 micropayments.',
         aiAgent: {
           type: 'autonomous',
           model: 'claude-opus-4-6',
-          capabilities: ['agent-discovery', 'agent-hiring', 'skill-publishing', 'reputation-tracking', 'privacy-compliance', 'chat'],
+          capabilities: ['agent-discovery', 'agent-hiring', 'skill-publishing', 'reputation-tracking', 'privacy-compliance', 'chat', 'credit-management'],
           creator: 'OpSpawn',
         },
         properties: {
-          tags: ['marketplace', 'agents', 'hedera', 'hcs-10', 'hcs-19', 'hcs-26', 'privacy', 'x402'],
+          tags: ['marketplace', 'agents', 'hedera', 'hcs-10', 'hcs-19', 'hcs-26', 'hcs-20', 'privacy', 'x402', 'a2a'],
         },
         socials: [
           { platform: 'twitter', handle: '@opspawn' },
           { platform: 'github', handle: 'opspawn' },
+          { platform: 'website', handle: 'https://hedera.opspawn.com' },
         ],
       } as any,
-      communicationProtocol: 'hcs-10',
+      protocol: 'https',
       registry: 'hashgraph-online',
       endpoint: 'https://hedera.opspawn.com/api/agent',
       metadata: {
         provider: 'opspawn',
-        version: '0.19.0',
-        standards: ['HCS-10', 'HCS-11', 'HCS-14', 'HCS-19', 'HCS-20', 'HCS-26'],
+        version: '1.0.0',
+        nativeId: 'hedera.opspawn.com',
+        category: 'marketplace',
+        openConvAICompatible: true,
+        customFields: {
+          network,
+          nativeId: `hedera:${network}:${accountId}`,
+          accountId,
+          inboundTopicId: process.env.INBOUND_TOPIC_ID || '0.0.7854276',
+          outboundTopicId: process.env.OUTBOUND_TOPIC_ID || '0.0.7854275',
+          profileTopicId: process.env.PROFILE_TOPIC_ID || '0.0.7854282',
+          standards: 'HCS-10,HCS-11,HCS-14,HCS-19,HCS-20,HCS-26',
+        },
       },
     });
 
-    // Handle async registration (202 response)
-    if ((result as any)?.status === 'pending' && (result as any)?.attemptId) {
-      const final = await client.waitForRegistrationCompletion((result as any).attemptId, {
-        intervalMs: 2000,
-        timeoutMs: 60000,
-      });
+    // Handle async registration (pending/partial responses)
+    const { isPendingRegisterAgentResponse } = await import('@hashgraphonline/standards-sdk');
+    if (isPendingRegisterAgentResponse(result)) {
+      const final = await client.waitForRegistrationCompletion(
+        (result as any).registrationId || (result as any).attemptId,
+        { intervalMs: 3000, timeoutMs: 60000 },
+      );
       registrationResult = { success: true, method: 'registry-broker', ...final };
     } else {
       registrationResult = { success: true, method: 'registry-broker', ...result };

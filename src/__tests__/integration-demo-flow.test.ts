@@ -85,6 +85,14 @@ vi.mock('@/lib/server', () => ({
       createTopic: vi.fn().mockResolvedValue('0.0.99999'),
       sendMessage: vi.fn().mockResolvedValue({ sequenceNumber: 1 }),
     },
+    registryBroker: {
+      getStatus: () => ({
+        registered: true,
+        uaid: 'uaid:aid:test123',
+        brokerUrl: 'https://hol.org/registry/api/v1',
+        lastCheck: new Date().toISOString(),
+      }),
+    },
     startTime: Date.now() - 120000,
   })),
   getServerContextSync: vi.fn().mockReturnValue({
@@ -102,6 +110,14 @@ vi.mock('@/lib/server', () => ({
         topicsCreated: 3,
         messagesSubmitted: 15,
         connected: true,
+      }),
+    },
+    registryBroker: {
+      getStatus: () => ({
+        registered: true,
+        uaid: 'uaid:aid:test123',
+        brokerUrl: 'https://hol.org/registry/api/v1',
+        lastCheck: new Date().toISOString(),
       }),
     },
     startTime: Date.now() - 120000,

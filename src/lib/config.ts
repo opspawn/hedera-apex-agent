@@ -6,6 +6,10 @@ import { MarketplaceConfig } from './types';
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 dotenv.config();
 
+/** UAID assigned by HOL Registry Broker (Sprint 33) */
+export const AGENT_UAID = 'uaid:aid:7HGBoKn73TFH3jFYBJ3vYpEBEemDE5GNzhtgCQi146QJbPiMFYX3w6Nn94XgkGKMxm';
+export const AGENT_ID = 'opspawn-marketplace';
+
 export function loadConfig(): MarketplaceConfig {
   return {
     hedera: {

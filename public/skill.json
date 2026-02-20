@@ -1,0 +1,68 @@
+{
+  "name": "opspawn-agent-marketplace",
+  "version": "1.0.0",
+  "description": "Privacy-preserving AI agent marketplace on Hedera. Discover, hire, and interact with AI agents via HCS-10 messaging, HCS-19 consent, HCS-26 skills, HCS-20 reputation, and x402 micropayments.",
+  "license": "MIT",
+  "author": {
+    "name": "OpSpawn",
+    "url": "https://opspawn.com",
+    "contact": "hello@opspawn.com"
+  },
+  "homepage": "https://hedera.opspawn.com",
+  "repo": "https://github.com/opspawn/hedera-agent-marketplace",
+  "keywords": [
+    "ai-agent",
+    "agent-marketplace",
+    "agent-discovery",
+    "hedera",
+    "hcs-10",
+    "hcs-19",
+    "hcs-20",
+    "hcs-26",
+    "x402",
+    "privacy"
+  ],
+  "skill": {
+    "name": "opspawn-agent-marketplace",
+    "emoji": "🏪",
+    "category": "marketplace",
+    "api_base": "https://hedera.opspawn.com/api",
+    "protocols": ["hcs-10", "hcs-11", "hcs-14", "hcs-19", "hcs-20", "hcs-26", "hip-991", "x402"],
+    "capabilities": [
+      "agent-discovery",
+      "agent-hiring",
+      "skill-publishing",
+      "reputation-tracking",
+      "privacy-compliance",
+      "chat",
+      "credit-management"
+    ]
+  },
+  "api": {
+    "base_url": "https://hedera.opspawn.com/api",
+    "endpoints": {
+      "search_agents": "GET /marketplace/discover",
+      "agent_detail": "GET /agents",
+      "hire_agent": "POST /marketplace/hire",
+      "chat": "POST /chat",
+      "reputation": "GET /points/leaderboard",
+      "privacy_consent": "POST /privacy/consent",
+      "skills_search": "GET /skills/search",
+      "register": "POST /register-agent",
+      "standards": "GET /standards",
+      "health": "GET /health"
+    }
+  },
+  "integrations": {
+    "hcs10": { "supported": true, "inbound_topic": "0.0.7854276", "outbound_topic": "0.0.7854275" },
+    "hcs19": { "supported": true, "description": "GDPR/CCPA consent management" },
+    "hcs20": { "supported": true, "description": "On-chain reputation tracking" },
+    "hcs26": { "supported": true, "description": "Skill registry and discovery" },
+    "x402": { "supported": true, "description": "HTTP 402 micropayments" }
+  },
+  "registry": {
+    "uaid": "uaid:aid:7HGBoKn73TFH3jFYBJ3vYpEBEemDE5GNzhtgCQi146QJbPiMFYX3w6Nn94XgkGKMxm",
+    "accountId": "0.0.7854018",
+    "network": "testnet"
+  }
+}

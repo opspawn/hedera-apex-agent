@@ -11,7 +11,7 @@
  * - Local publish/discover for marketplace operations
  * - On-chain resolve via resolveOnChainSkill() for production reads
  *
- * TODO [Sprint 2]: Wire publish to live Registry Broker API at https://broker.hol.org
+ * Sprint 33: Broker publish/list via Registry Broker skills API
  */
 
 import type {
@@ -80,8 +80,7 @@ export class HCS26SkillRegistry {
    * 3. Poll for completion
    * 4. Return published skill with topic_id
    *
-   * TODO [Sprint 2]: Replace mock with real Registry Broker API calls:
-   *   POST {brokerUrl}/api/skills/publish
+   * Stores locally and optionally publishes via Registry Broker API.
    */
   async publishSkill(skillManifest: SkillManifest): Promise<PublishedSkill> {
     const validation = this.validateManifest(skillManifest);
@@ -110,8 +109,7 @@ export class HCS26SkillRegistry {
    *
    * Searches published skills by name, description, category, and tags.
    *
-   * TODO [Sprint 3]: Replace with Registry Broker search API:
-   *   GET {brokerUrl}/api/skills/search?q={query}
+   * Searches local cache. For broker search, use the skills/search API route.
    */
   async discoverSkills(query: string): Promise<SkillDiscoveryResult> {
     const q = query.toLowerCase();
@@ -146,8 +144,7 @@ export class HCS26SkillRegistry {
   /**
    * Retrieve a specific published skill by its HCS topic ID.
    *
-   * TODO [Sprint 2]: Query mirror node for on-chain data:
-   *   GET testnet.mirrornode.hedera.com/api/v1/topics/{topicId}/messages?limit=1&order=desc
+   * Returns from local cache. For on-chain, use resolveOnChainSkill().
    */
   async getSkillByTopic(topicId: string): Promise<PublishedSkill | null> {
     return this.publishedSkills.get(topicId) || null;
@@ -269,6 +266,65 @@ export class HCS26SkillRegistry {
       errors.push('Failed to load official SDK for validation');
     }
     return { valid: errors.length === 0, errors };
+  }
+
+  /**
+   * Publish a skill to the Registry Broker's HCS-26 skills API.
+   * Requires authentication via rb-client. Returns the job result.
+   */
+  async publishSkillViaBroker(
+    skillJson: Record<string, unknown>,
+    skillMd: string,
+  ): Promise<{ jobId: string; status: string; directoryTopicId?: string }> {
+    const { getClient } = await import('../hol/rb-client');
+    const client = await getClient();
+
+    const files = [
+      {
+        name: 'skill.json',
+        base64: Buffer.from(JSON.stringify(skillJson, null, 2) + '\n', 'utf8').toString('base64'),
+        mimeType: 'application/json',
+        role: 'skill-json' as const,
+      },
+      {
+        name: 'SKILL.md',
+        base64: Buffer.from(skillMd, 'utf8').toString('base64'),
+        mimeType: 'text/markdown',
+        role: 'skill-md' as const,
+      },
+    ];
+
+    const quote = await client.quoteSkillPublish({ files, accountId: this.config.accountId });
+    const publishResult = await client.publishSkill({
+      files,
+      quoteId: (quote as any).quoteId,
+      accountId: this.config.accountId,
+    });
+
+    return {
+      jobId: (publishResult as any).jobId,
+      status: 'submitted',
+    };
+  }
+
+  /**
+   * List skills from the Registry Broker API.
+   */
+  async listBrokerSkills(opts?: { name?: string; limit?: number; tag?: string }): Promise<unknown[]> {
+    try {
+      const { getClient } = await import('../hol/rb-client');
+      const client = await getClient();
+      const result = await client.listSkills({
+        name: opts?.name,
+        limit: opts?.limit || 20,
+        tag: opts?.tag,
+        includeFiles: true,
+      } as any);
+      const skills = (result as any)?.skills || (result as any)?.results || result;
+      return Array.isArray(skills) ? skills : [];
+    } catch {
+      return [];
+    }
   }
 
   /**
