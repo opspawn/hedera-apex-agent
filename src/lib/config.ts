@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
+import path from 'path';
 import { MarketplaceConfig } from './types';
 
+// Load .env.local first (higher priority), then .env as fallback
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 dotenv.config();
 
 export function loadConfig(): MarketplaceConfig {

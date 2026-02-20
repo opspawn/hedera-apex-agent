@@ -48,7 +48,7 @@ export async function seedDemoAgents(
       skills: seed.skills,
       protocols: seed.protocols,
       payment_address: seed.payment_address,
-    });
+    }, { fast: true });
 
     // Set reputation score on the registered agent
     ma.agent.reputation_score = seed.reputation;

@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server';
-import { getServerContextSync } from '@/lib/server';
+import { getServerContext, getServerContextSync } from '@/lib/server';
 
 const VERSION = '1.0.0';
 const STANDARDS = ['HCS-10', 'HCS-11', 'HCS-14', 'HCS-19', 'HCS-20', 'HCS-26'];
 
 export async function GET() {
-  const ctx = getServerContextSync();
+  // Use async context so agents are seeded before reporting count
+  let ctx;
+  try {
+    ctx = await getServerContext();
+  } catch {
+    ctx = getServerContextSync();
+  }
+
+  // Report agent count from marketplace (where agents are actually registered)
+  const agentCount = ctx.marketplace.getAgentCount() || ctx.registry.getCount();
+
   return NextResponse.json({
     status: 'ok',
     version: VERSION,
@@ -13,7 +23,7 @@ export async function GET() {
     network: ctx.config.hedera.network,
     account: ctx.config.hedera.accountId,
     standards: STANDARDS,
-    agents: ctx.registry.getCount(),
+    agents: agentCount,
     testnet: ctx.testnetIntegration.getStatus(),
   });
 }

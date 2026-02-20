@@ -93,9 +93,9 @@ export class MarketplaceService {
    * 4. HCS-14: Create DID document
    * 5. HCS-26: Publish agent skills to the skill registry
    */
-  async registerAgentWithIdentity(registration: AgentRegistration): Promise<MarketplaceAgent> {
+  async registerAgentWithIdentity(registration: AgentRegistration, options?: { fast?: boolean }): Promise<MarketplaceAgent> {
     // Step 1: HCS-10 — Register on OpenConvAI registry
-    const agent = await this.hcs10.registerAgent(registration);
+    const agent = await this.hcs10.registerAgent(registration, options);
     this.agents.set(agent.agent_id, agent);
 
     // Step 2: HCS-19 — Create verifiable identity
