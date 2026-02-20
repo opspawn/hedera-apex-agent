@@ -51,12 +51,24 @@ export default function Home() {
             { code: 'HCS-20', title: 'Reputation', desc: 'On-chain reputation points and leaderboard tracking', color: 'text-yellow-400' },
             { code: 'HCS-26', title: 'Skill Registry', desc: 'Decentralized skill manifests and capability discovery', color: 'text-emerald-400' },
           ].map((s) => (
-            <div key={s.code} className="bg-hedera-card border border-hedera-border rounded-xl p-5 hover:border-hedera-green/20 transition-colors">
+            <Link
+              key={s.code}
+              href={`/standards#${s.code.toLowerCase()}`}
+              className="bg-hedera-card border border-hedera-border rounded-xl p-5 hover:border-hedera-green/20 transition-colors group"
+            >
               <div className={`font-mono text-lg font-bold mb-1 ${s.color}`}>{s.code}</div>
-              <div className="text-sm text-white font-medium mb-1">{s.title}</div>
+              <div className="text-sm text-white font-medium mb-1 group-hover:text-hedera-green transition-colors">{s.title}</div>
               <div className="text-xs text-gray-500 leading-relaxed">{s.desc}</div>
-            </div>
+            </Link>
           ))}
+        </div>
+        <div className="text-center mt-6">
+          <Link
+            href="/standards"
+            className="text-sm text-gray-400 hover:text-hedera-green transition-colors"
+          >
+            View all standards compliance details &rarr;
+          </Link>
         </div>
       </div>
     </main>

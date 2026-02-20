@@ -1,13 +1,15 @@
 /**
  * Chat API Route
  *
- * Supports two modes:
+ * Supports three modes:
  * 1. Local marketplace responder (default) — answers questions about agents, skills, etc.
  * 2. Registry Broker relay — creates real chat sessions with remote agents via HOL
+ * 3. HCS-10 direct — sends messages via Hedera Consensus Service topics
  *
  * Mode is determined by the `mode` field in the request body:
  * - mode: 'local' (default) — uses buildMarketplaceResponse
  * - mode: 'broker' — relays through Registry Broker chat
+ * - mode: 'hcs10' — sends via HCS-10 topic messaging
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -21,6 +23,8 @@ interface ChatMessage {
   role: 'user' | 'agent';
   content: string;
   timestamp: string;
+  topicId?: string;
+  sequenceNumber?: number;
 }
 
 interface ChatSession {
@@ -29,12 +33,13 @@ interface ChatSession {
   createdAt: string;
   updatedAt: string;
   brokerSessionId?: string;
-  mode: 'local' | 'broker';
+  hcs10TopicId?: string;
+  mode: 'local' | 'broker' | 'hcs10';
 }
 
 const localSessions = new Map<string, ChatSession>();
 
-function getOrCreateSession(sessionId?: string, mode: 'local' | 'broker' = 'local'): ChatSession {
+function getOrCreateSession(sessionId?: string, mode: 'local' | 'broker' | 'hcs10' = 'local'): ChatSession {
   if (sessionId && localSessions.has(sessionId)) {
     return localSessions.get(sessionId)!;
   }
@@ -57,15 +62,24 @@ export async function POST(request: NextRequest) {
     sessionId,
     mode = 'local',
     uaid,
+    agentId,
+    topicId,
   } = body as {
     message?: string;
     sessionId?: string;
-    mode?: 'local' | 'broker';
+    mode?: 'local' | 'broker' | 'hcs10';
     uaid?: string;
+    agentId?: string;
+    topicId?: string;
   };
 
   if (!message || typeof message !== 'string' || !message.trim()) {
     return NextResponse.json({ error: 'Message is required' }, { status: 400 });
+  }
+
+  // --- HCS-10 Direct Messaging Mode ---
+  if (mode === 'hcs10') {
+    return handleHCS10Chat(message.trim(), sessionId, agentId, topicId);
   }
 
   // --- Registry Broker Chat Relay Mode ---
@@ -177,6 +191,101 @@ async function handleBrokerChat(
       sessionId: sessionId || uuid(),
       mode: 'local',
       brokerError: err.message,
+      fallback: true,
+    });
+  }
+}
+
+/**
+ * Handle chat through HCS-10 direct messaging.
+ * Creates an HCS topic for the conversation and sends messages via Hedera Consensus Service.
+ */
+async function handleHCS10Chat(
+  message: string,
+  sessionId?: string,
+  agentId?: string,
+  topicId?: string,
+): Promise<NextResponse> {
+  try {
+    const ctx = await getServerContext();
+    const session = getOrCreateSession(sessionId, 'hcs10');
+
+    // Create or reuse an HCS-10 topic for this conversation
+    if (!session.hcs10TopicId) {
+      if (topicId) {
+        session.hcs10TopicId = topicId;
+      } else {
+        // Create a new conversation topic
+        const newTopicId = await ctx.hcs10.createTopic(
+          `hcs10:chat:${agentId || 'marketplace'}:${session.id.slice(0, 8)}`
+        );
+        session.hcs10TopicId = newTopicId;
+      }
+    }
+
+    // Send message to HCS-10 topic
+    const sendResult = await ctx.hcs10.sendMessage(session.hcs10TopicId, {
+      type: 'hcs-10-chat-message',
+      sender: 'user',
+      agentId: agentId || undefined,
+      content: message,
+      sessionId: session.id,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Record user message
+    session.messages.push({
+      id: uuid(),
+      role: 'user',
+      content: message,
+      timestamp: new Date().toISOString(),
+      topicId: session.hcs10TopicId,
+      sequenceNumber: sendResult.sequenceNumber,
+    });
+
+    // Generate a local response (agent would respond via their own HCS-10 listener)
+    const localResult = buildMarketplaceResponse(message, ctx.chatMarketplaceCtx);
+
+    // Send agent response to the topic as well
+    const agentSendResult = await ctx.hcs10.sendMessage(session.hcs10TopicId, {
+      type: 'hcs-10-chat-response',
+      sender: 'agent',
+      agentId: agentId || 'marketplace',
+      content: localResult.response,
+      sessionId: session.id,
+      timestamp: new Date().toISOString(),
+    });
+
+    session.messages.push({
+      id: uuid(),
+      role: 'agent',
+      content: localResult.response,
+      timestamp: new Date().toISOString(),
+      topicId: session.hcs10TopicId,
+      sequenceNumber: agentSendResult.sequenceNumber,
+    });
+    session.updatedAt = new Date().toISOString();
+
+    return NextResponse.json({
+      response: localResult.response,
+      sessionId: session.id,
+      topicId: session.hcs10TopicId,
+      sequenceNumber: agentSendResult.sequenceNumber,
+      agentId: localResult.agentId || agentId,
+      mode: 'hcs10',
+    });
+  } catch (err: any) {
+    // Fallback to local mode if HCS-10 fails
+    console.error('[chat] HCS-10 messaging failed, falling back to local:', err.message);
+
+    const ctx = await getServerContext();
+    const result = buildMarketplaceResponse(message, ctx.chatMarketplaceCtx);
+
+    return NextResponse.json({
+      response: result.response,
+      sessionId: sessionId || uuid(),
+      mode: 'local',
+      hcs10Error: err.message,
       fallback: true,
     });
   }

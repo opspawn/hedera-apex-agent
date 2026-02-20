@@ -185,12 +185,27 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
                 </div>
               </div>
 
-              <button
-                onClick={() => onChat(agent)}
-                className="w-full mt-4 py-3 bg-hedera-green text-hedera-dark font-semibold rounded-xl hover:bg-hedera-green/90 transition-colors"
-              >
-                Chat with Agent
-              </button>
+              <div className="flex gap-3 mt-4">
+                <button
+                  onClick={() => onChat(agent)}
+                  className="flex-1 py-3 bg-hedera-green text-hedera-dark font-semibold rounded-xl hover:bg-hedera-green/90 transition-colors"
+                >
+                  Chat with Agent
+                </button>
+                {agent.agent_id && (
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams()
+                      params.set('agentId', agent.agent_id)
+                      params.set('name', agent.name)
+                      window.location.href = `/chat?${params.toString()}`
+                    }}
+                    className="px-4 py-3 border border-cyan-400/30 text-cyan-400 font-medium rounded-xl hover:bg-cyan-400/10 transition-colors text-sm"
+                  >
+                    HCS-10
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

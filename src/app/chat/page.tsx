@@ -8,8 +8,10 @@ interface Message {
   role: 'user' | 'agent'
   content: string
   timestamp: string
-  mode?: 'local' | 'broker'
+  mode?: 'local' | 'broker' | 'hcs10'
   fallback?: boolean
+  topicId?: string
+  sequenceNumber?: number
 }
 
 const SUGGESTIONS = [
@@ -24,11 +26,16 @@ function ChatContent() {
   const targetUaid = searchParams.get('uaid')
   const targetName = searchParams.get('name')
 
+  const targetAgentId = searchParams.get('agentId')
+
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [chatMode, setChatMode] = useState<'local' | 'broker'>(targetUaid ? 'broker' : 'local')
+  const [hcs10TopicId, setHcs10TopicId] = useState<string | null>(null)
+  const [chatMode, setChatMode] = useState<'local' | 'broker' | 'hcs10'>(
+    targetUaid ? 'broker' : targetAgentId ? 'hcs10' : 'local'
+  )
   const [brokerStatus, setBrokerStatus] = useState<{ brokerRelayAvailable: boolean } | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -54,8 +61,17 @@ function ChatContent() {
         mode: 'broker',
       }
       setMessages([greetMsg])
+    } else if (targetAgentId && targetName && messages.length === 0) {
+      const greetMsg: Message = {
+        id: crypto.randomUUID(),
+        role: 'agent',
+        content: `Connected to **${targetName}** via HCS-10 direct messaging.\n\nMessages are sent through Hedera Consensus Service topics for on-chain verifiability.`,
+        timestamp: new Date().toISOString(),
+        mode: 'hcs10',
+      }
+      setMessages([greetMsg])
     }
-  }, [targetUaid, targetName]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [targetUaid, targetName, targetAgentId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendMessage = useCallback(async (text?: string) => {
     const msg = (text || input).trim()
@@ -80,10 +96,13 @@ function ChatContent() {
           sessionId,
           mode: chatMode,
           uaid: targetUaid || undefined,
+          agentId: targetAgentId || undefined,
+          topicId: hcs10TopicId || undefined,
         }),
       })
       const data = await res.json()
       if (data.sessionId) setSessionId(data.sessionId)
+      if (data.topicId) setHcs10TopicId(data.topicId)
 
       const agentMsg: Message = {
         id: crypto.randomUUID(),
@@ -92,6 +111,8 @@ function ChatContent() {
         timestamp: new Date().toISOString(),
         mode: data.mode,
         fallback: data.fallback,
+        topicId: data.topicId,
+        sequenceNumber: data.sequenceNumber,
       }
       setMessages(prev => [...prev, agentMsg])
     } catch {
@@ -106,7 +127,7 @@ function ChatContent() {
       setIsLoading(false)
       inputRef.current?.focus()
     }
-  }, [input, isLoading, sessionId, chatMode, targetUaid])
+  }, [input, isLoading, sessionId, chatMode, targetUaid, targetAgentId, hcs10TopicId])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -127,12 +148,19 @@ function ChatContent() {
       {/* Status bar */}
       <div className="bg-hedera-card/50 border-b border-hedera-border px-6 py-2 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 text-xs">
-          <span className={`w-2 h-2 rounded-full ${chatMode === 'broker' ? 'bg-hedera-purple' : 'bg-hedera-green'}`} />
+          <span className={`w-2 h-2 rounded-full ${
+            chatMode === 'hcs10' ? 'bg-cyan-400' : chatMode === 'broker' ? 'bg-hedera-purple' : 'bg-hedera-green'
+          }`} />
           <span className="text-gray-500">
-            {chatMode === 'broker' && targetName
-              ? `Broker relay: ${targetName}`
-              : 'Marketplace assistant ready'}
+            {chatMode === 'hcs10' && targetName
+              ? `HCS-10 direct: ${targetName}`
+              : chatMode === 'broker' && targetName
+                ? `Broker relay: ${targetName}`
+                : 'Marketplace assistant ready'}
           </span>
+          {hcs10TopicId && chatMode === 'hcs10' && (
+            <span className="text-cyan-400/60 font-mono text-[10px]">Topic: {hcs10TopicId}</span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -144,6 +172,16 @@ function ChatContent() {
             }`}
           >
             Local
+          </button>
+          <button
+            onClick={() => setChatMode('hcs10')}
+            className={`px-2.5 py-1 text-[10px] rounded-full border transition-colors ${
+              chatMode === 'hcs10'
+                ? 'bg-cyan-400/10 border-cyan-400/30 text-cyan-400'
+                : 'border-hedera-border text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            HCS-10
           </button>
           <button
             onClick={() => setChatMode('broker')}
@@ -211,10 +249,15 @@ function ChatContent() {
                 <span>{new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                 {msg.mode && (
                   <span className={`px-1.5 py-0.5 rounded ${
-                    msg.mode === 'broker' ? 'bg-hedera-purple/10 text-hedera-purple' : 'bg-hedera-green/10 text-hedera-green'
+                    msg.mode === 'hcs10' ? 'bg-cyan-400/10 text-cyan-400'
+                    : msg.mode === 'broker' ? 'bg-hedera-purple/10 text-hedera-purple'
+                    : 'bg-hedera-green/10 text-hedera-green'
                   }`}>
-                    {msg.mode}
+                    {msg.mode === 'hcs10' ? 'HCS-10' : msg.mode}
                   </span>
+                )}
+                {msg.topicId && (
+                  <span className="text-cyan-400/50 font-mono">{msg.topicId}</span>
                 )}
                 {msg.fallback && (
                   <span className="px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-400">fallback</span>
@@ -241,7 +284,7 @@ function ChatContent() {
       <div className="bg-hedera-card border-t border-hedera-border px-6 py-4 shrink-0">
         <div className="flex gap-3 max-w-3xl mx-auto items-end">
           <button
-            onClick={() => { setMessages([]); setSessionId(null) }}
+            onClick={() => { setMessages([]); setSessionId(null); setHcs10TopicId(null) }}
             className="w-10 h-10 rounded-lg border border-hedera-border bg-hedera-dark text-gray-500 hover:text-hedera-green hover:border-hedera-green/30 flex items-center justify-center text-lg transition-colors shrink-0"
             title="New conversation"
           >
@@ -252,7 +295,7 @@ function ChatContent() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={chatMode === 'broker' ? 'Send message to agent via broker relay...' : 'Ask about agents, skills, hiring, or privacy...'}
+            placeholder={chatMode === 'hcs10' ? 'Send message via HCS-10 topic...' : chatMode === 'broker' ? 'Send message to agent via broker relay...' : 'Ask about agents, skills, hiring, or privacy...'}
             rows={1}
             className="flex-1 bg-hedera-dark border border-hedera-border rounded-lg px-4 py-2.5 text-sm text-white placeholder-gray-600 resize-none focus:outline-none focus:border-hedera-green/50 focus:ring-1 focus:ring-hedera-green/20"
             style={{ maxHeight: '120px' }}

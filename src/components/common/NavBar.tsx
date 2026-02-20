@@ -10,6 +10,7 @@ const navItems = [
   { href: '/marketplace', label: 'Marketplace' },
   { href: '/register', label: 'Register Agent' },
   { href: '/chat', label: 'Chat' },
+  { href: '/standards', label: 'Standards' },
   { href: '/privacy', label: 'Privacy' },
 ]
 
