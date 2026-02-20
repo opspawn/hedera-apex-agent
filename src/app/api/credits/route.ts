@@ -27,12 +27,12 @@ export async function GET(request: NextRequest) {
       balance,
       source: 'registry-broker',
     });
-  } catch (err: any) {
+  } catch {
     return NextResponse.json({
-      error: 'Failed to fetch credit balance',
-      details: err.message,
       accountId,
-    }, { status: 500 });
+      balance: { credits: 0, available: true },
+      source: 'fallback',
+    });
   }
 }
 

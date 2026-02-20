@@ -33,12 +33,12 @@ export function AgentCard({ agent, onSelect }: AgentCardProps) {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-hedera-purple/30 to-hedera-green/30 flex items-center justify-center border border-hedera-border group-hover:border-hedera-green/30 transition-colors">
             <span className="text-lg font-bold text-hedera-green">
-              {agent.name.charAt(0).toUpperCase()}
+              {(agent.name || 'A').charAt(0).toUpperCase()}
             </span>
           </div>
           <div>
             <h3 className="font-semibold text-white group-hover:text-hedera-green transition-colors truncate max-w-[200px]">
-              {agent.name}
+              {agent.name || 'Unknown Agent'}
             </h3>
             {agent.uaid && (
               <p className="text-xs text-gray-500 font-mono truncate max-w-[200px]">

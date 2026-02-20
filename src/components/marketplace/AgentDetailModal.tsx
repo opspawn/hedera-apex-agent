@@ -31,7 +31,7 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
   useEffect(() => {
     async function fetchSkills() {
       try {
-        const agentName = agent.name.split(' ')[0].toLowerCase()
+        const agentName = (agent.name || 'agent').split(' ')[0].toLowerCase()
         const res = await fetch(`/api/skills/search?q=${encodeURIComponent(agentName)}&limit=10`)
         const data = await res.json()
         setSkills(data)
@@ -77,11 +77,11 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-hedera-purple/30 to-hedera-green/30 flex items-center justify-center border border-hedera-border">
                 <span className="text-2xl font-bold text-hedera-green">
-                  {agent.name.charAt(0).toUpperCase()}
+                  {(agent.name || 'A').charAt(0).toUpperCase()}
                 </span>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">{agent.name}</h2>
+                <h2 className="text-xl font-bold text-white">{agent.name || 'Unknown Agent'}</h2>
                 {agent.uaid && (
                   <p className="text-xs text-gray-500 font-mono mt-0.5">{agent.uaid}</p>
                 )}
@@ -197,7 +197,7 @@ export function AgentDetailModal({ agent, onClose, onChat }: AgentDetailModalPro
                     onClick={() => {
                       const params = new URLSearchParams()
                       params.set('agentId', agent.agent_id)
-                      params.set('name', agent.name)
+                      params.set('name', agent.name || 'Unknown Agent')
                       window.location.href = `/chat?${params.toString()}`
                     }}
                     className="px-4 py-3 border border-cyan-400/30 text-cyan-400 font-medium rounded-xl hover:bg-cyan-400/10 transition-colors text-sm"

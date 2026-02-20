@@ -76,7 +76,7 @@ export default function MarketplacePage() {
     setSelectedAgent(null)
     const params = new URLSearchParams()
     if (agent.uaid) params.set('uaid', agent.uaid)
-    params.set('name', agent.name)
+    params.set('name', agent.name || 'Unknown Agent')
     router.push(`/chat?${params.toString()}`)
   }, [router])
 

@@ -53,16 +53,16 @@ describe('GET /api/credits', () => {
     );
   });
 
-  it('returns 500 on fetch error', async () => {
+  it('returns fallback balance on fetch error', async () => {
     mockRequestJson.mockRejectedValue(new Error('Network error'));
 
     const req = makeRequest('http://localhost:3003/api/credits');
     const res = await GET(req);
     const data = await res.json();
 
-    expect(res.status).toBe(500);
-    expect(data.error).toBe('Failed to fetch credit balance');
-    expect(data.details).toBe('Network error');
+    expect(res.status).toBe(200);
+    expect(data.source).toBe('fallback');
+    expect(data.balance).toEqual({ credits: 0, available: true });
   });
 });
 
