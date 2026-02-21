@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
       const hits = (brokerResult as any)?.hits || [];
       const total = (brokerResult as any)?.total || hits.length;
 
-      // Map broker hits to our format
+      // Map broker hits to our format and filter out noisy demo agents
       const brokerAgents = hits.map((hit: any) => ({
         agent_id: hit.uaid || hit.id || 'unknown',
         name: hit.name || hit.display_name || 'Unknown Agent',
@@ -82,7 +82,13 @@ export async function GET(request: NextRequest) {
         registry: hit.registry || 'hashgraph-online',
         available: hit.available || false,
         source: 'registry-broker',
-      }));
+      })).filter((a: any) => {
+        const name = (a.name || '').toLowerCase();
+        // Exclude sdk-demo-* agents and generic zero-trust agents
+        if (name.startsWith('sdk-demo')) return false;
+        if (a.trust_score === 0 && (name === 'unknown agent' || name.startsWith('agent-'))) return false;
+        return true;
+      });
 
       // In hybrid mode, merge with local results
       if (mode === 'hybrid') {

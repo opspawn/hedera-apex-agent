@@ -110,7 +110,7 @@ export class ConsentManager {
     const consent: UserConsentRecord = {
       consent_id: consentId,
       user_id: request.user_id,
-      agent_id: this.config.accountId,
+      agent_id: request.agent_id || this.config.accountId,
       jurisdiction: request.jurisdiction,
       legal_basis: request.legal_basis,
       purposes: [...request.purposes],

@@ -66,13 +66,13 @@ export default function MarketplacePage() {
   }, [])
 
   useEffect(() => {
-    fetchAgents('agent')
+    fetchAgents('agent', 'local')
   }, [fetchAgents])
 
   // Auto-refresh every 30 seconds (background, no loading spinner)
   useEffect(() => {
     const interval = setInterval(() => {
-      fetchAgents(searchQuery || 'agent', 'hybrid', true)
+      fetchAgents(searchQuery || 'agent', 'local', true)
     }, 30000)
     return () => clearInterval(interval)
   }, [fetchAgents, searchQuery])

@@ -9,7 +9,7 @@ interface SearchBarProps {
 
 export function SearchBar({ onSearch, loading }: SearchBarProps) {
   const [query, setQuery] = useState('')
-  const [mode, setMode] = useState<'hybrid' | 'broker' | 'local'>('hybrid')
+  const [mode, setMode] = useState<'hybrid' | 'broker' | 'local'>('local')
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()

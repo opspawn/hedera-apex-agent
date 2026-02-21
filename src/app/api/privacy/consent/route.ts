@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
 
     const result = await ctx.privacyService.grantConsent({
       user_id,
+      agent_id,
       purposes,
       data_types: data_types || ['task_data'],
       jurisdiction: jurisdiction || 'US',

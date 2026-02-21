@@ -433,6 +433,7 @@ export interface ConsentReceipt {
 /** Request to grant consent (input to ConsentManager.grantConsent) */
 export interface GrantConsentRequest {
   user_id: string;
+  agent_id?: string;
   purposes: string[];
   data_types: string[];
   jurisdiction: string;
