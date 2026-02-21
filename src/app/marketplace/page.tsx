@@ -41,6 +41,13 @@ export default function MarketplacePage() {
         ...(data.localAgents || []),
       ]
 
+      // Sort: agents with richer data (trust scores, skills, descriptions) first
+      allAgents.sort((a: any, b: any) => {
+        const aScore = (a.trust_score || 0) + (a.skills?.length || 0) * 10 + (a.available ? 50 : 0)
+        const bScore = (b.trust_score || 0) + (b.skills?.length || 0) * 10 + (b.available ? 50 : 0)
+        return bScore - aScore
+      })
+
       setAgents(allAgents)
       setTotal(data.total || allAgents.length)
       setSource(data.source || mode)
