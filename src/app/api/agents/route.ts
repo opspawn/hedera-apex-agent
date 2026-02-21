@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   const ctx = await getServerContext();
   const { searchParams } = new URL(request.url);
 
-  const result = await ctx.registry.searchAgents({
+  const result = await ctx.marketplace.discoverAgents({
     q: searchParams.get('q') || undefined,
     category: searchParams.get('category') || undefined,
     status: searchParams.get('status') || undefined,
