@@ -99,7 +99,7 @@ describe('RegistryBroker', () => {
     );
   });
 
-  it('getStatus returns registration state', async () => {
+  it('getStatus returns registered=true from seeded UAID on cold start', async () => {
     const { RegistryBroker } = await import('@/lib/hol/registry-broker');
     const broker = new RegistryBroker({
       accountId: '0.0.7854018',
@@ -107,11 +107,21 @@ describe('RegistryBroker', () => {
       network: 'testnet',
     });
 
-    // Before registration
-    const before = broker.getStatus();
-    expect(before.registered).toBe(false);
+    // Should be registered from seeded UAID (Sprint 33 cached registration)
+    const status = broker.getStatus();
+    expect(status.registered).toBe(true);
+    expect(status.uaid).toMatch(/^uaid:aid:/);
+    expect(status.brokerUrl).toContain('hol.org');
+  });
 
-    // After registration
+  it('getStatus updates after fresh registration', async () => {
+    const { RegistryBroker } = await import('@/lib/hol/registry-broker');
+    const broker = new RegistryBroker({
+      accountId: '0.0.7854018',
+      privateKey: 'test-key',
+      network: 'testnet',
+    });
+
     await broker.register();
     const after = broker.getStatus();
     expect(after.registered).toBe(true);
@@ -135,6 +145,63 @@ describe('RegistryBroker', () => {
     const broker = RegistryBroker.fromConfig();
     expect(broker).toBeDefined();
     expect(broker.getBrokerUrl()).toContain('hol.org');
+  });
+
+  it('falls back to direct HTTP when SDK throws parse error', async () => {
+    // Override registerAgent to throw a parse error
+    const { RegistryBrokerClient } = await import('@hashgraphonline/standards-sdk');
+    const { RegistryBroker } = await import('@/lib/hol/registry-broker');
+    const { getClient } = await import('@/lib/hol/rb-client');
+
+    const client = await getClient();
+    (client.registerAgent as any).mockRejectedValueOnce(
+      new Error('Failed to parse register agent response'),
+    );
+
+    // Mock global fetch for the direct HTTP fallback
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        status: 'duplicate',
+        uaid: 'uaid:aid:httpFallback123',
+        agentId: 'opspawn-marketplace',
+        message: 'Agent already registered',
+      }),
+    }) as any;
+
+    const broker = new RegistryBroker({
+      accountId: '0.0.7854018',
+      privateKey: 'test-key',
+      network: 'testnet',
+    });
+
+    const result = await broker.register();
+    expect(result.success).toBe(true);
+    expect(result.uaid).toBe('uaid:aid:httpFallback123');
+
+    globalThis.fetch = originalFetch;
+  });
+
+  it('does not fallback on non-parse SDK errors', async () => {
+    const { RegistryBroker } = await import('@/lib/hol/registry-broker');
+    const { getClient } = await import('@/lib/hol/rb-client');
+
+    const client = await getClient();
+    (client.registerAgent as any).mockRejectedValueOnce(
+      new Error('Authentication failed'),
+    );
+
+    const broker = new RegistryBroker({
+      accountId: '0.0.7854018',
+      privateKey: 'test-key',
+      network: 'testnet',
+    });
+
+    const result = await broker.register();
+    expect(result.success).toBe(false);
+    expect(result.error).toContain('Authentication failed');
   });
 });
 
