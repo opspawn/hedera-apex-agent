@@ -82,6 +82,15 @@ function ChatContent() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Auto-grow textarea as user types
+  useEffect(() => {
+    const el = inputRef.current
+    if (el) {
+      el.style.height = 'auto'
+      el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+    }
+  }, [input])
+
   useEffect(() => {
     if (targetUaid && targetName && messages.length === 0) {
       const greetMsg: Message = {
@@ -154,7 +163,7 @@ function ChatContent() {
       const errMsg: Message = {
         id: crypto.randomUUID(),
         role: 'agent',
-        content: 'Network error: could not reach the server.',
+        content: 'Unable to reach the server. Please check your connection and try again.',
         timestamp: new Date().toISOString(),
       }
       setMessages(prev => [...prev, errMsg])

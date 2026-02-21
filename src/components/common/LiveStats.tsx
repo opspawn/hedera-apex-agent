@@ -33,7 +33,8 @@ export function LiveStats() {
           credits: credits?.balance?.credits ?? credits?.balance?.balance ?? 0,
         })
       } catch {
-        setStats(null)
+        // Show zeros rather than hiding the section entirely
+        setStats({ agents: 0, source: 'offline', brokerAvailable: false, credits: 0 })
       } finally {
         setLoading(false)
       }
@@ -66,8 +67,12 @@ export function LiveStats() {
   return (
     <div className="max-w-5xl mx-auto px-6 pb-12">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {statItems.map((item) => (
-          <div key={item.label} className="bg-hedera-card border border-hedera-border rounded-xl p-5">
+        {statItems.map((item, i) => (
+          <div
+            key={item.label}
+            className="bg-hedera-card border border-hedera-border rounded-xl p-5 animate-slide-up hover:border-hedera-green/20 transition-colors"
+            style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'both' }}
+          >
             <p className="text-xs text-gray-500 mb-2">{item.label}</p>
             <p className={`text-2xl font-bold ${item.color} capitalize`}>
               {typeof item.value === 'number' ? item.value.toLocaleString() : item.value}

@@ -214,6 +214,20 @@ export async function getServerContext(): Promise<ServerContext> {
         }
         _ctx.seeded = true;
       }
+
+      // Auto-register with HOL Registry Broker in the background.
+      // This refreshes the cached registration and ensures the agent
+      // appears in the HOL index for the W4 demo.
+      _ctx.registryBroker.register().then((result) => {
+        if (result.success) {
+          console.log(`[server] Registry Broker registration confirmed: ${result.uaid || 'cached'}`);
+        } else {
+          console.warn(`[server] Registry Broker registration failed: ${result.error}`);
+        }
+      }).catch((err) => {
+        console.warn('[server] Registry Broker auto-registration error:', err instanceof Error ? err.message : err);
+      });
+
       return _ctx;
     })();
   }

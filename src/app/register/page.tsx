@@ -119,7 +119,7 @@ export default function RegisterPage() {
   const labelClass = 'block text-xs text-gray-400 mb-1.5'
 
   return (
-    <main className="min-h-screen bg-hedera-dark text-white">
+    <main className="min-h-screen bg-hedera-dark text-white page-enter">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">

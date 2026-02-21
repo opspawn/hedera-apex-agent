@@ -8,6 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { getClient } from '@/lib/hol/rb-client';
+import { getServerContextSync } from '@/lib/server';
 
 let registrationResult: any = null;
 
@@ -164,9 +165,26 @@ export async function POST() {
 }
 
 export async function GET() {
+  // Check module-level cache first (from POST calls this session)
   if (registrationResult) {
     return NextResponse.json(registrationResult);
   }
+
+  // Fall back to the RegistryBroker singleton which caches the known UAID
+  // across server restarts (Sprint 33 cached registration)
+  const ctx = getServerContextSync();
+  const brokerStatus = ctx.registryBroker.getStatus();
+  if (brokerStatus.registered) {
+    return NextResponse.json({
+      registered: true,
+      uaid: brokerStatus.uaid,
+      agentId: brokerStatus.agentId,
+      brokerUrl: brokerStatus.brokerUrl,
+      method: 'cached-registration',
+      lastCheck: brokerStatus.lastCheck,
+    });
+  }
+
   return NextResponse.json({
     registered: false,
     message: 'POST to this endpoint to register the agent',

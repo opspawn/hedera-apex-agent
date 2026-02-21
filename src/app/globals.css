@@ -82,3 +82,21 @@ body {
 .page-enter {
   animation: slide-up 0.3s ease-out, fade-in 0.3s ease-out;
 }
+
+/* Smooth selection highlight */
+::selection {
+  background: rgba(0, 232, 157, 0.25);
+  color: white;
+}
+
+/* Focus-visible ring for keyboard nav */
+*:focus-visible {
+  outline: 2px solid rgba(0, 232, 157, 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Better textarea auto-grow */
+textarea {
+  overflow-y: auto;
+}

@@ -200,7 +200,7 @@ export default async function StandardsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-hedera-dark text-white">
+    <main className="min-h-screen bg-hedera-dark text-white page-enter">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-10 text-center">
