@@ -17,7 +17,7 @@ import { ProcessingBasis } from '@/lib/hcs/hcs19-types';
 export async function POST(request: NextRequest) {
   try {
     const ctx = await getServerContext();
-    let body: Record<string, unknown>;
+    let body: any;
     try {
       body = await request.json();
     } catch {
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const ctx = await getServerContext();
-    let body: Record<string, unknown>;
+    let body: any;
     try {
       body = await request.json();
     } catch {

@@ -56,7 +56,7 @@ function getOrCreateSession(sessionId?: string, mode: 'local' | 'broker' | 'hcs1
 }
 
 export async function POST(request: NextRequest) {
-  let body: Record<string, unknown>;
+  let body: any;
   try {
     body = await request.json();
   } catch {

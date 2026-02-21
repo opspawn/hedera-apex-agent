@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
  * Purchase credits via HBAR transfer.
  */
 export async function POST(request: NextRequest) {
-  let body: Record<string, unknown>;
+  let body: any;
   try {
     body = await request.json();
   } catch {

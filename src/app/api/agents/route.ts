@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const ctx = await getServerContext();
-  let body: Record<string, unknown>;
+  let body: any;
   try {
     body = await request.json();
   } catch {

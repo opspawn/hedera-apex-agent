@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
  * Checks eligibility first, then submits feedback if eligible.
  */
 export async function POST(request: NextRequest) {
-  let body: Record<string, unknown>;
+  let body: any;
   try {
     body = await request.json();
   } catch {
