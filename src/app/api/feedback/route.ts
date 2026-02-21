@@ -50,7 +50,12 @@ export async function GET(request: NextRequest) {
  * Checks eligibility first, then submits feedback if eligible.
  */
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
   const { uaid, sessionId, score, tag1, tag2 } = body as {
     uaid: string;
     sessionId: string;

@@ -18,7 +18,12 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const ctx = await getServerContext();
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
 
   const { name, description, skills, endpoint, protocols, payment_address } = body;
   if (!name || !description || !skills || !endpoint) {

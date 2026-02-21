@@ -17,7 +17,12 @@ import { ProcessingBasis } from '@/lib/hcs/hcs19-types';
 export async function POST(request: NextRequest) {
   try {
     const ctx = await getServerContext();
-    const body = await request.json();
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const {
       user_id,
       agent_id,
@@ -110,7 +115,12 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const ctx = await getServerContext();
-    const body = await request.json();
+    let body: Record<string, unknown>;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
     const { consentId, reason } = body;
 
     if (!consentId) {

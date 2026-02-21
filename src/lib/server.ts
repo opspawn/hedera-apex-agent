@@ -215,6 +215,51 @@ export async function getServerContext(): Promise<ServerContext> {
         _ctx.seeded = true;
       }
 
+      // Publish marketplace-level HCS-26 skills (marketplace-search + agent-chat)
+      try {
+        await _ctx.hcs26.publishSkill({
+          name: 'marketplace-search',
+          version: '1.0.0',
+          description: 'Search and discover AI agents by skill, category, or reputation in the Hedera Agent Marketplace',
+          author: 'OpSpawn Marketplace',
+          license: 'MIT',
+          skills: [
+            {
+              name: 'marketplace-search',
+              description: 'Full-text search across registered agents, skills, and categories with reputation-weighted ranking',
+              category: 'discovery',
+              tags: ['search', 'discovery', 'marketplace', 'agents', 'hedera'],
+              input_schema: { type: 'object', properties: { q: { type: 'string' }, category: { type: 'string' }, limit: { type: 'number' } } },
+              output_schema: { type: 'object', properties: { agents: { type: 'array' }, total: { type: 'number' } } },
+            },
+          ],
+          tags: ['marketplace', 'discovery', 'hedera', 'hcs-26'],
+        });
+
+        await _ctx.hcs26.publishSkill({
+          name: 'agent-chat',
+          version: '1.0.0',
+          description: 'Interactive chat with AI agents via HCS-10 messaging protocol in the Hedera Agent Marketplace',
+          author: 'OpSpawn Marketplace',
+          license: 'MIT',
+          skills: [
+            {
+              name: 'agent-chat',
+              description: 'Real-time conversational interaction with registered agents using HCS-10 topic-based messaging',
+              category: 'communication',
+              tags: ['chat', 'messaging', 'hcs-10', 'agents', 'real-time'],
+              input_schema: { type: 'object', properties: { agent_id: { type: 'string' }, message: { type: 'string' }, session_id: { type: 'string' } } },
+              output_schema: { type: 'object', properties: { response: { type: 'string' }, session_id: { type: 'string' } } },
+            },
+          ],
+          tags: ['chat', 'communication', 'hedera', 'hcs-10'],
+        });
+
+        console.log(`[server] Published 2 marketplace HCS-26 skills (marketplace-search, agent-chat)`);
+      } catch (err) {
+        console.warn('[server] Marketplace skill publishing failed:', err instanceof Error ? err.message : err);
+      }
+
       // Auto-register with HOL Registry Broker in the background.
       // This refreshes the cached registration and ensures the agent
       // appears in the HOL index for the W4 demo.

@@ -42,7 +42,12 @@ export async function GET(request: NextRequest) {
  * Purchase credits via HBAR transfer.
  */
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
   const { hbarAmount = 0.75, memo } = body as {
     hbarAmount?: number;
     memo?: string;

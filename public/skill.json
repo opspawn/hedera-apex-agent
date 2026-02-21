@@ -47,6 +47,7 @@
       "chat": "POST /chat",
       "reputation": "GET /points/leaderboard",
       "privacy_consent": "POST /privacy/consent",
+      "skills_list": "GET /skills",
       "skills_search": "GET /skills/search",
       "register": "POST /register-agent",
       "standards": "GET /standards",

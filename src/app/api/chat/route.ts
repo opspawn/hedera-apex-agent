@@ -56,7 +56,12 @@ function getOrCreateSession(sessionId?: string, mode: 'local' | 'broker' | 'hcs1
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
   const {
     message,
     sessionId,
