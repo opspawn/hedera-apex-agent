@@ -25,7 +25,7 @@
 **Navigate to:** `/marketplace`
 
 **What to show:**
-- 140+ agents discovered via HOL Registry Broker in hybrid mode
+- 135+ agents discovered via HOL Registry Broker in hybrid mode
 - Search bar with mode selector: Hybrid / Broker / Local
 - Agent cards showing name, description, trust scores, skills, protocols
 - Source badges: `hashgraph-online` for broker agents, `HOL` for local
@@ -118,4 +118,4 @@
 2. **Real Registry Broker connection** — not mocked, discovering real agents from the HOL index
 3. **Privacy-first architecture** — HCS-19 consent required before data processing
 4. **Natural language interface** — users don't need to understand protocols
-5. **388 automated tests** — production quality, not a hackathon prototype
+5. **400 automated tests** — production quality, not a hackathon prototype
