@@ -29,13 +29,20 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const result = await ctx.marketplace.verifyAndHire({
-    clientId,
-    agentId,
-    skillId,
-    input: input || {},
-    payerAccount,
-  });
+  try {
+    const result = await ctx.marketplace.verifyAndHire({
+      clientId,
+      agentId,
+      skillId,
+      input: input || {},
+      payerAccount,
+    });
 
-  return NextResponse.json(result);
+    return NextResponse.json(result);
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: 'Hire failed', details: err instanceof Error ? err.message : 'Unknown error' },
+      { status: 500 },
+    );
+  }
 }

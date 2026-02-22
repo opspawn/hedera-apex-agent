@@ -115,6 +115,14 @@ test_endpoint GET "/api/register-agent" "" "register-cached" "200"
 echo ""
 echo "--- POST ENDPOINTS ---"
 
+# Dynamically fetch first agent ID (changes on each restart since it uses Date.now())
+AGENT_ID=$(curl -s "${BASE}/api/agents" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['agents'][0]['agent']['agent_id'])" 2>/dev/null)
+FIRST_SKILL=$(curl -s "${BASE}/api/agents" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['agents'][0]['agent']['skills'][0]['id'])" 2>/dev/null)
+if [ -z "$AGENT_ID" ]; then AGENT_ID="0.0.0"; fi
+if [ -z "$FIRST_SKILL" ]; then FIRST_SKILL="smart-contract-audit"; fi
+echo "  Using agent: ${AGENT_ID}, skill: ${FIRST_SKILL}"
+echo ""
+
 # POST: Register new agent (requires: name, description, skills[], endpoint)
 test_endpoint POST "/api/marketplace/register" \
     '{"name":"StressTestBot-'${RUN_NUM}'","description":"Stress test agent run #'${RUN_NUM}'","skills":[{"name":"qa-testing","description":"Quality assurance","category":"testing"}],"endpoint":"https://example.com/agent-'${RUN_NUM}'"}' \
@@ -122,12 +130,12 @@ test_endpoint POST "/api/marketplace/register" \
 
 # POST: Privacy consent FIRST (required before hiring; fields: user_id, agent_id, purposes[])
 test_endpoint POST "/api/privacy/consent" \
-    '{"user_id":"stress-tester-'${RUN_NUM}'","agent_id":"0.0.17717013755041","purposes":["service_delivery"],"data_types":["task_data"],"jurisdiction":"US"}' \
+    '{"user_id":"stress-tester-'${RUN_NUM}'","agent_id":"'"${AGENT_ID}"'","purposes":["service_delivery"],"data_types":["task_data"],"jurisdiction":"US"}' \
     "privacy-consent" "201"
 
 # POST: Hire agent (requires consent first; fields: clientId, agentId, skillId)
 test_endpoint POST "/api/marketplace/hire" \
-    '{"clientId":"stress-tester-'${RUN_NUM}'","agentId":"0.0.17717013755041","skillId":"smart-contract-audit","input":{"contract_address":"0.0.5567890"}}' \
+    '{"clientId":"stress-tester-'${RUN_NUM}'","agentId":"'"${AGENT_ID}"'","skillId":"'"${FIRST_SKILL}"'","input":{"contract_address":"0.0.5567890"}}' \
     "hire-agent" "200"
 
 # POST: Chat (local mode)
