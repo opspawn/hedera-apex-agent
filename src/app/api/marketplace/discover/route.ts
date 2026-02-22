@@ -34,6 +34,12 @@ function mapLocalAgents(agents: any[]): Record<string, unknown>[] {
       verification: ma.verificationStatus || 'unverified',
       has_privacy_consent: ma.verificationStatus === 'verified',
     };
+  }).filter((a) => {
+    const name = (a.name as string).toLowerCase();
+    // Exclude stress-test and transient demo agents from discovery results
+    if (name.startsWith('stresstestbot')) return false;
+    if (name.startsWith('demoagent-')) return false;
+    return true;
   });
 }
 
