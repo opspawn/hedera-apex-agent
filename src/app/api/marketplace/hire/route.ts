@@ -15,6 +15,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields: clientId, agentId, skillId' }, { status: 400 });
   }
 
+  // Check agent exists BEFORE consent check to avoid misleading consent_required for nonexistent agents
+  const agentProfile = await ctx.marketplace.getAgentProfile(agentId);
+  if (!agentProfile) {
+    return NextResponse.json(
+      { error: 'agent_not_found', message: `No agent registered with ID: ${agentId}`, agent_id: agentId },
+      { status: 404 },
+    );
+  }
+
   // HCS-19 Privacy Check: Verify consent exists before hiring
   if (!skipConsent) {
     const consentCheck = await ctx.privacyService.checkConsent(clientId, 'service_delivery');
@@ -40,8 +49,13 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (err: any) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    // Map known service errors to appropriate HTTP status codes
+    if (message.includes('not found')) {
+      return NextResponse.json({ error: 'Hire failed', details: message }, { status: 404 });
+    }
     return NextResponse.json(
-      { error: 'Hire failed', details: err instanceof Error ? err.message : 'Unknown error' },
+      { error: 'Hire failed', details: message },
       { status: 500 },
     );
   }

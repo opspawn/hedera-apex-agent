@@ -39,6 +39,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check for existing active consent for this user+agent to avoid duplicates
+    const existingConsents = await ctx.privacyService.listActiveConsents(agent_id);
+    const existingForUser = existingConsents.find(
+      c => c.user_id === user_id && purposes.every((p: string) => c.purposes.includes(p)),
+    );
+    if (existingForUser) {
+      return NextResponse.json(
+        {
+          consent: existingForUser,
+          existing: true,
+          message: 'Active consent already exists for this user, agent, and purpose(s).',
+        },
+        { status: 200 },
+      );
+    }
+
     const result = await ctx.privacyService.grantConsent({
       user_id,
       agent_id,
@@ -138,9 +154,15 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json(result);
   } catch (err: any) {
-    return NextResponse.json(
-      { error: err.message || 'Failed to revoke consent' },
-      { status: 500 },
-    );
+    const message = err.message || 'Failed to revoke consent';
+    // Return 404 for consent records that don't exist
+    if (message.includes('not found')) {
+      return NextResponse.json({ error: message }, { status: 404 });
+    }
+    // Return 409 for already-revoked consent
+    if (message.includes('already revoked') || message.includes('already withdrawn')) {
+      return NextResponse.json({ error: message }, { status: 409 });
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
