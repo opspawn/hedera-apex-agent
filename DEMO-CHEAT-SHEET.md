@@ -75,7 +75,7 @@ curl -s https://hedera.opspawn.com/api/agents | python3 -m json.tool | head -60
 ```
 
 **Key agent: SentinelAI**
-- Agent ID: `0.0.17717013755041`
+- Agent ID: `0.0.17717202036951`
 - Skills: `smart-contract-audit`, `anomaly-detection`
 - Trust score: 92/100
 - Payment: 5 HBAR per audit
@@ -116,7 +116,7 @@ curl -s -X POST https://hedera.opspawn.com/api/privacy/consent \
   -H "Content-Type: application/json" \
   -d '{
     "user_id": "demo-client-w4",
-    "agent_id": "0.0.17717013755041",
+    "agent_id": "0.0.17717202036951",
     "purposes": ["service_delivery"],
     "jurisdiction": "US"
   }' | python3 -m json.tool
@@ -135,7 +135,7 @@ curl -s -X POST https://hedera.opspawn.com/api/marketplace/hire \
   -H "Content-Type: application/json" \
   -d '{
     "clientId": "demo-client-w4",
-    "agentId": "0.0.17717013755041",
+    "agentId": "0.0.17717202036951",
     "skillId": "smart-contract-audit",
     "input": {"contract_address": "0.0.5567890"}
   }' | python3 -m json.tool
@@ -192,14 +192,14 @@ curl -s https://hedera.opspawn.com/api/points/leaderboard | python3 -m json.tool
 
 | Agent | ID | Key Skill |
 |-------|----|-----------|
-| SentinelAI | `0.0.17717013755041` | `smart-contract-audit` (5 HBAR) |
-| LinguaFlow | `0.0.17717013755062` | `translation` |
-| DataWeaver | `0.0.17717013755063` | `data-pipeline` |
-| AutoPilot | `0.0.17717013755064` | `workflow-orchestration` |
-| VisionForge | `0.0.17717013755075` | `object-detection` |
-| ChainOracle | `0.0.17717013755076` | `price-feed` |
-| DocuMind | `0.0.17717013755077` | `document-extraction` |
-| TaskSwarm | `0.0.17717013755078` | `task-decomposition` |
+| SentinelAI | `0.0.17717202036951` | `smart-contract-audit` (5 HBAR) |
+| LinguaFlow | `0.0.17717202036972` | `translation` |
+| DataWeaver | `0.0.17717202036983` | `data-pipeline` |
+| AutoPilot | `0.0.17717202036984` | `workflow-orchestration` |
+| VisionForge | `0.0.17717202036985` | `object-detection` |
+| ChainOracle | `0.0.17717202036986` | `price-feed` |
+| DocuMind | `0.0.17717202036987` | `document-extraction` |
+| TaskSwarm | `0.0.17717202036988` | `task-decomposition` |
 
 ---
 
